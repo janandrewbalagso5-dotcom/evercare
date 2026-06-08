@@ -71,7 +71,9 @@ export default function LandingPage({
   setName,
   registerRole,
   setRegisterRole,
+  captchaVerified,
   setCaptchaVerified,
+  captchaResetKey,
   handleLogin,
   handleRegister,
   showNotification,
@@ -85,6 +87,8 @@ export default function LandingPage({
   const [rememberMe, setRememberMe] = useState(false);
   const [loginRole, setLoginRole] = useState("admin");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [localCaptchaReset, setLocalCaptchaReset] = useState(0);
+  const effectiveCaptchaKey = captchaResetKey * 1000 + localCaptchaReset;
   const [contactForm, setContactForm] = useState({
     name: "",
     email: "",
@@ -994,16 +998,20 @@ export default function LandingPage({
             <div className="plain-login-card">
               <div className="plain-login-header">
                 <p className="plain-login-system">HOSPITAL APPOINTMENT SYSTEM</p>
-                <h2 className="plain-login-title">LOGIN</h2>
+                <h2 className="plain-login-title">
+                  {authTab === "register" ? "REGISTER" : "LOGIN"}
+                </h2>
                 <p className="plain-login-greeting">
-                  Hello,{" "}
-                  {loginRole === "admin"
-                    ? "Admin!"
-                    : loginRole === "doctor"
-                      ? "Doctor!"
-                      : loginRole === "staff"
-                        ? "Staff!"
-                        : "Patient!"}
+                  {authTab === "register"
+                    ? "Hello, Patient!"
+                    : `Hello, ${loginRole === "admin"
+                      ? "Admin!"
+                      : loginRole === "doctor"
+                        ? "Doctor!"
+                        : loginRole === "staff"
+                          ? "Staff!"
+                          : "Patient!"
+                    }`}
                 </p>
               </div>
 
@@ -1070,7 +1078,7 @@ export default function LandingPage({
                   </label>
 
                   {loginRole === "patient" && (
-                    <Captcha onVerify={setCaptchaVerified} />
+                    <Captcha onVerify={setCaptchaVerified} resetKey={effectiveCaptchaKey} />
                   )}
 
                   <button type="submit" className="plain-login-btn">
@@ -1092,6 +1100,10 @@ export default function LandingPage({
                 </form>
               ) : (
                 <form onSubmit={handleRegister} className="plain-login-form">
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", backgroundColor: "#e0f2fe", border: "1px solid #bae6fd", borderRadius: "8px", padding: "7px 12px", marginBottom: "4px" }}>
+                    <User size={14} color="#0284c7" />
+                    <span style={{ fontSize: "12px", fontWeight: "600", color: "#0284c7", letterSpacing: "0.4px" }}>Patient Registration Only</span>
+                  </div>
                   <div className="plain-field-group">
                     <span className="plain-field-icon">
                       <User size={15} />
@@ -1118,7 +1130,20 @@ export default function LandingPage({
                       className="plain-field-input"
                     />
                   </div>
-                  <Captcha onVerify={setCaptchaVerified} />
+                  <div className="plain-field-group">
+                    <span className="plain-field-icon">
+                      <Lock size={15} />
+                    </span>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="plain-field-input"
+                    />
+                  </div>
+                  <Captcha onVerify={setCaptchaVerified} resetKey={effectiveCaptchaKey} />
                   <button type="submit" className="plain-login-btn">
                     REGISTER
                   </button>
@@ -1131,6 +1156,7 @@ export default function LandingPage({
                   onClick={() => {
                     setAuthTab("login");
                     setCaptchaVerified(false);
+                    setLocalCaptchaReset((k) => k + 1);
                   }}
                 >
                   Sign In
@@ -1141,6 +1167,7 @@ export default function LandingPage({
                   onClick={() => {
                     setAuthTab("register");
                     setCaptchaVerified(false);
+                    setLocalCaptchaReset((k) => k + 1);
                   }}
                 >
                   Register

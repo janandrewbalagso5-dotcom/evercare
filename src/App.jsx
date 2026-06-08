@@ -39,6 +39,7 @@ export default function App() {
   const [name, setName] = useState("");
   const [registerRole, setRegisterRole] = useState("patient");
   const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
 
   // Security Verification State
   const [twoFactorUser, setTwoFactorUser] = useState(null);
@@ -250,6 +251,7 @@ export default function App() {
     setPassword("");
     setName("");
     setCaptchaVerified(false);
+    setCaptchaResetKey((k) => k + 1);
     setLandingTab("home");
     showNotification("Logged out successfully.", "info");
   };
@@ -465,6 +467,7 @@ export default function App() {
               setRegisterRole={setRegisterRole}
               captchaVerified={captchaVerified}
               setCaptchaVerified={setCaptchaVerified}
+              captchaResetKey={captchaResetKey}
               handleLogin={handleLogin}
               handleRegister={handleRegister}
               showNotification={showNotification}

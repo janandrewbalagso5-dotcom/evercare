@@ -15,6 +15,8 @@ import {
   Clock,
   User,
   ShieldCheck,
+  Menu,
+  LogOut,
 } from "lucide-react";
 import { dbService } from "../services/firebase";
 
@@ -84,6 +86,7 @@ export default function StaffPortal({
 }) {
   const [activeView, setActiveView] = useState("dashboard");
   const [openNavGroup, setOpenNavGroup] = useState("schedule");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleNavGroup = (key) =>
     setOpenNavGroup((prev) => (prev === key ? null : key));
 
@@ -310,26 +313,42 @@ export default function StaffPortal({
     <div className="adm-layout">
       {/* ── top bar ── */}
       <header className="adm-topbar">
-        <h1 className="adm-system-title">Hospital Appointment System</h1>
+        {/* Mobile sidebar toggle */}
+        <button
+          className="adm-mobile-toggle"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="Toggle sidebar"
+        >
+          {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
+        <div className="adm-topbar-center">
+          <h1 className="adm-system-title">Hospital Appointment System</h1>
+        </div>
         {onLogout && (
           <button
             className="adm-topbar-logout"
             onClick={onLogout}
             title="Sign Out"
           >
-            <X size={15} />
+            <LogOut size={15} />
           </button>
         )}
       </header>
 
       <div className="adm-body">
+        {/* Overlay for mobile — closes sidebar on tap */}
+        <div
+          className={`adm-sidebar-overlay ${sidebarOpen ? "visible" : ""}`}
+          onClick={() => setSidebarOpen(false)}
+        />
+
         {/* ── sidebar ── */}
-        <aside className="adm-sidebar">
+        <aside className={`adm-sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="adm-sidebar-label">Staff Navigation</div>
 
           <button
             className={`adm-nav-dashboard ${activeView === "dashboard" ? "active" : ""}`}
-            onClick={() => setActiveView("dashboard")}
+            onClick={() => { setActiveView("dashboard"); setSidebarOpen(false); }}
           >
             <LayoutDashboard size={16} />
             <span>Dashboard</span>
@@ -344,18 +363,18 @@ export default function StaffPortal({
             <NavItem
               label="Full Queue"
               active={activeView === "queue"}
-              onClick={() => setActiveView("queue")}
+              onClick={() => { setActiveView("queue"); setSidebarOpen(false); }}
             />
             <NavItem
               label="Pending Approvals"
               active={activeView === "pending-appointment"}
-              onClick={() => setActiveView("pending-appointment")}
+              onClick={() => { setActiveView("pending-appointment"); setSidebarOpen(false); }}
               badge={pendingApts.length}
             />
             <NavItem
               label="Confirmed Appointments"
               active={activeView === "confirmed-appointment"}
-              onClick={() => setActiveView("confirmed-appointment")}
+              onClick={() => { setActiveView("confirmed-appointment"); setSidebarOpen(false); }}
             />
           </NavGroup>
 
@@ -368,12 +387,12 @@ export default function StaffPortal({
             <NavItem
               label="Register Patient"
               active={activeView === "add-patient"}
-              onClick={() => setActiveView("add-patient")}
+              onClick={() => { setActiveView("add-patient"); setSidebarOpen(false); }}
             />
             <NavItem
               label="Patient Directory"
               active={activeView === "view-patient"}
-              onClick={() => setActiveView("view-patient")}
+              onClick={() => { setActiveView("view-patient"); setSidebarOpen(false); }}
             />
           </NavGroup>
 
@@ -386,7 +405,7 @@ export default function StaffPortal({
             <NavItem
               label="Billing History"
               active={activeView === "ledger"}
-              onClick={() => setActiveView("ledger")}
+              onClick={() => { setActiveView("ledger"); setSidebarOpen(false); }}
             />
           </NavGroup>
         </aside>

@@ -19,6 +19,7 @@ import {
   Printer,
   X,
   Play,
+  Menu,
 } from "lucide-react";
 import { dbService } from "../services/firebase";
 import { notificationService } from "../services/notifications";
@@ -264,6 +265,7 @@ export default function DoctorPortal({
 }) {
   const [activeView, setActiveView] = useState("dashboard");
   const [openNavGroup, setOpenNavGroup] = useState("appointment");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleNavGroup = (key) =>
     setOpenNavGroup((prev) => (prev === key ? null : key));
 
@@ -567,7 +569,17 @@ export default function DoctorPortal({
   return (
     <div className="adm-layout">
       <header className="adm-topbar">
-        <h1 className="adm-system-title">Hospital Appointment System</h1>
+        {/* Mobile sidebar toggle */}
+        <button
+          className="adm-mobile-toggle"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="Toggle sidebar"
+        >
+          {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
+        <div className="adm-topbar-center">
+          <h1 className="adm-system-title">Hospital Appointment System</h1>
+        </div>
         {onLogout && (
           <button className="adm-topbar-logout" onClick={onLogout}>
             <LogOut size={15} />
@@ -576,19 +588,25 @@ export default function DoctorPortal({
       </header>
 
       <div className="adm-body">
+        {/* Overlay for mobile — closes sidebar on tap */}
+        <div
+          className={`adm-sidebar-overlay ${sidebarOpen ? "visible" : ""}`}
+          onClick={() => setSidebarOpen(false)}
+        />
+
         {/* ── SIDEBAR ─────────────────────────────────────────── */}
-        <aside className="adm-sidebar">
+        <aside className={`adm-sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="adm-sidebar-label">MAIN NAVIGATION</div>
           <button
             className={`adm-nav-dashboard ${activeView === "dashboard" ? "active" : ""}`}
-            onClick={() => setActiveView("dashboard")}
+            onClick={() => { setActiveView("dashboard"); setSidebarOpen(false); }}
           >
             <LayoutDashboard size={16} />
             <span>Dashboard</span>
           </button>
           <button
             className={`adm-nav-dashboard ${activeView === "profile" ? "active" : ""}`}
-            onClick={() => setActiveView("profile")}
+            onClick={() => { setActiveView("profile"); setSidebarOpen(false); }}
           >
             <User size={16} />
             <span>Profile</span>
@@ -602,12 +620,12 @@ export default function DoctorPortal({
             <NavItem
               label="View Pending Appointments"
               active={activeView === "apt-pending"}
-              onClick={() => setActiveView("apt-pending")}
+              onClick={() => { setActiveView("apt-pending"); setSidebarOpen(false); }}
             />
             <NavItem
               label="View Approved Appointments"
               active={activeView === "apt-approved"}
-              onClick={() => setActiveView("apt-approved")}
+              onClick={() => { setActiveView("apt-approved"); setSidebarOpen(false); }}
             />
           </NavGroup>
           <NavGroup
@@ -619,12 +637,12 @@ export default function DoctorPortal({
             <NavItem
               label="Add Visiting Hour"
               active={activeView === "doc-add"}
-              onClick={() => setActiveView("doc-add")}
+              onClick={() => { setActiveView("doc-add"); setSidebarOpen(false); }}
             />
             <NavItem
               label="View Visiting Hour"
               active={activeView === "doc-view"}
-              onClick={() => setActiveView("doc-view")}
+              onClick={() => { setActiveView("doc-view"); setSidebarOpen(false); }}
             />
           </NavGroup>
           <NavGroup
@@ -636,12 +654,12 @@ export default function DoctorPortal({
             <NavItem
               label="View Patients"
               active={activeView === "patients"}
-              onClick={() => setActiveView("patients")}
+              onClick={() => { setActiveView("patients"); setSidebarOpen(false); }}
             />
           </NavGroup>
           <button
             className={`adm-nav-dashboard ${activeView === "income" ? "active" : ""}`}
-            onClick={() => setActiveView("income")}
+            onClick={() => { setActiveView("income"); setSidebarOpen(false); }}
           >
             <DollarSign size={16} />
             <span>Income Report</span>
@@ -655,12 +673,12 @@ export default function DoctorPortal({
             <NavItem
               label="View Treatment Records"
               active={activeView === "treat-records"}
-              onClick={() => setActiveView("treat-records")}
+              onClick={() => { setActiveView("treat-records"); setSidebarOpen(false); }}
             />
             <NavItem
               label="View Treatment"
               active={activeView === "treat-view"}
-              onClick={() => setActiveView("treat-view")}
+              onClick={() => { setActiveView("treat-view"); setSidebarOpen(false); }}
             />
           </NavGroup>
         </aside>

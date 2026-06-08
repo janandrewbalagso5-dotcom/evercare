@@ -24,8 +24,12 @@ import {
   X,
   Pencil,
   Trash2,
+  CheckCircle,
+  XCircle,
+  Bell,
 } from "lucide-react";
 import { dbService } from "../services/firebase";
+import { notificationService } from "../services/notifications";
 
 /* ── helper: collapsible nav group (controlled) ──────────────────── */
 function NavGroup({ icon, label, children, isOpen, onToggle }) {
@@ -323,6 +327,97 @@ export default function AdminPortal({
       setNewAdmin({ name: "", email: "", password: "" });
     } catch (e) {
       showNotification("Error: " + e.message, "error");
+    }
+  };
+
+  /* ── Appointment: Approve ─────────────────────────────────────── */
+  const handleApproveAppointment = async (apt) => {
+    try {
+      await dbService.updateAppointmentStatus(apt.id, { status: "Confirmed" });
+      await dbService.logAction(
+        currentUser.email,
+        "Appointment Approved",
+        `Approved appointment ${apt.id} for ${apt.patientName} with ${apt.doctorName}`,
+      );
+      // Find patient email from patients list
+      const patient = patients.find((p) => p.uid === apt.patientId);
+      if (patient?.email) {
+        notificationService.sendAppointmentApproved(
+          patient.email,
+          apt.patientName,
+          apt.doctorName,
+          apt.specialty,
+          apt.date,
+          apt.time,
+        );
+      }
+      showNotification(`Appointment confirmed. Patient notified via email.`, "success");
+      loadData();
+    } catch (e) {
+      showNotification("Error approving appointment: " + e.message, "error");
+    }
+  };
+
+  /* ── Appointment: Reject ─────────────────────────────────────── */
+  const handleRejectAppointment = async (apt) => {
+    if (!window.confirm(`Reject appointment for ${apt.patientName}?`)) return;
+    try {
+      await dbService.updateAppointmentStatus(apt.id, { status: "Cancelled" });
+      await dbService.logAction(
+        currentUser.email,
+        "Appointment Rejected",
+        `Rejected appointment ${apt.id} for ${apt.patientName}`,
+      );
+      const patient = patients.find((p) => p.uid === apt.patientId);
+      if (patient?.email) {
+        notificationService.sendAppointmentRejected(
+          patient.email,
+          apt.patientName,
+          apt.doctorName,
+          apt.date,
+          apt.time,
+          "",
+        );
+      }
+      showNotification(`Appointment rejected. Patient notified via email.`, "info");
+      loadData();
+    } catch (e) {
+      showNotification("Error rejecting appointment: " + e.message, "error");
+    }
+  };
+
+  /* ── Appointment: Send Reminder ──────────────────────────────── */
+  const [remindingId, setRemindingId] = useState(null);
+  const handleSendReminder = async (apt) => {
+    setRemindingId(apt.id);
+    try {
+      const patient = patients.find((p) => p.uid === apt.patientId);
+      if (!patient?.email) {
+        showNotification("Patient email not found.", "error");
+        return;
+      }
+      const sent = await notificationService.sendAppointmentReminder(
+        patient.email,
+        apt.patientName,
+        apt.doctorName,
+        apt.specialty,
+        apt.date,
+        apt.time,
+      );
+      if (sent) {
+        await dbService.logAction(
+          currentUser.email,
+          "Reminder Sent",
+          `Reminder sent to ${apt.patientName} for appointment with ${apt.doctorName} on ${apt.date}`,
+        );
+        showNotification(`Reminder sent to ${apt.patientName}.`, "success");
+      } else {
+        showNotification("Failed to send reminder. Check email address.", "error");
+      }
+    } catch (e) {
+      showNotification("Error sending reminder: " + e.message, "error");
+    } finally {
+      setRemindingId(null);
     }
   };
 
@@ -749,6 +844,7 @@ export default function AdminPortal({
                           <th>Date</th>
                           <th>Time</th>
                           <th>Status</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -761,6 +857,34 @@ export default function AdminPortal({
                             <td>{a.time}</td>
                             <td>
                               <span className="adm-badge orange">{a.status}</span>
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                                <button
+                                  onClick={() => handleApproveAppointment(a)}
+                                  title="Approve & notify patient"
+                                  style={{
+                                    display: "flex", alignItems: "center", gap: "4px",
+                                    padding: "4px 10px", borderRadius: "6px", border: "none",
+                                    background: "#d1fae5", color: "#065f46", cursor: "pointer",
+                                    fontSize: "12px", fontWeight: 600,
+                                  }}
+                                >
+                                  <CheckCircle size={13} /> Approve
+                                </button>
+                                <button
+                                  onClick={() => handleRejectAppointment(a)}
+                                  title="Reject & notify patient"
+                                  style={{
+                                    display: "flex", alignItems: "center", gap: "4px",
+                                    padding: "4px 10px", borderRadius: "6px", border: "none",
+                                    background: "#fee2e2", color: "#991b1b", cursor: "pointer",
+                                    fontSize: "12px", fontWeight: 600,
+                                  }}
+                                >
+                                  <XCircle size={13} /> Reject
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -792,6 +916,7 @@ export default function AdminPortal({
                           <th>Date</th>
                           <th>Time</th>
                           <th>Status</th>
+                          <th>Notify</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -804,6 +929,24 @@ export default function AdminPortal({
                             <td>{a.time}</td>
                             <td>
                               <span className="adm-badge green">{a.status}</span>
+                            </td>
+                            <td>
+                              <button
+                                onClick={() => handleSendReminder(a)}
+                                disabled={remindingId === a.id}
+                                title="Send appointment reminder email to patient"
+                                style={{
+                                  display: "flex", alignItems: "center", gap: "4px",
+                                  padding: "4px 10px", borderRadius: "6px", border: "none",
+                                  background: remindingId === a.id ? "#e5e7eb" : "#dbeafe",
+                                  color: remindingId === a.id ? "#9ca3af" : "#1e40af",
+                                  cursor: remindingId === a.id ? "not-allowed" : "pointer",
+                                  fontSize: "12px", fontWeight: 600,
+                                }}
+                              >
+                                <Bell size={13} />
+                                {remindingId === a.id ? "Sending…" : "Remind"}
+                              </button>
                             </td>
                           </tr>
                         ))}

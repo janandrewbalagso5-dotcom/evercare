@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
 
-export default function Captcha({ onVerify }) {
+export default function Captcha({ onVerify, resetKey }) {
   const [captchaText, setCaptchaText] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [status, setStatus] = useState("idle"); // 'idle', 'success', 'error'
@@ -118,7 +118,7 @@ export default function Captcha({ onVerify }) {
 
   useEffect(() => {
     handleRefresh();
-  }, []);
+  }, [resetKey]);
 
   useEffect(() => {
     if (captchaText) {
@@ -159,10 +159,10 @@ export default function Captcha({ onVerify }) {
             onChange={handleInputChange}
             placeholder="Enter the 6-character code"
             className={`w-full px-4 py-3 rounded-lg border text-sm font-semibold tracking-widest text-center transition duration-200 uppercase bg-slate-900/60 text-white ${status === "success"
-                ? "border-emerald-500/50 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                : status === "error"
-                  ? "border-rose-500/50 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
-                  : "border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              ? "border-emerald-500/50 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+              : status === "error"
+                ? "border-rose-500/50 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                : "border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               }`}
           />
 
