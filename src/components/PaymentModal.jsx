@@ -236,6 +236,27 @@ Consider invalid if: the image is not an ID card, it's a random photo, screensho
     setStep("form");
   };
 
+  const handlePayInPerson = async () => {
+    try {
+      await dbService.addTransaction({
+        appointmentId: aptId,
+        patientId: "pat_sample",
+        patientName: name,
+        amount: finalAmount,
+        originalAmount: baseAmount,
+        discountType: discountType || "none",
+        discountApplied: discountStep === "verified" ? discountResult.totalSaved : 0,
+        paymentMethod: "Cash - Pay in Person",
+        status: "Pending Collection",
+        referenceId: "cash_" + Math.random().toString(36).substring(2, 9).toUpperCase(),
+      });
+      await dbService.updateAppointmentStatus(aptId, { paymentStatus: "Pay in Person" });
+      onSuccess();
+    } catch (e) {
+      showNotification("Error recording cash payment: " + e.message, "error");
+    }
+  };
+
   const handleComplete = async () => {
     try {
       await dbService.addTransaction({
@@ -597,8 +618,17 @@ Consider invalid if: the image is not an ID card, it's a random photo, screensho
                     {loading ? (
                       <><Loader style={{ animation: "spin 1s linear infinite" }} size={13} /> SECURING CONNECTION...</>
                     ) : (
-                      `PAY PHP ${finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      `PAY \u20B1${finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                     )}
+                  </button>
+
+                  {/* Pay in Person (Cash) option */}
+                  <button
+                    type="button"
+                    onClick={handlePayInPerson}
+                    style={{ marginTop: "4px", padding: "10px", borderRadius: "8px", background: "transparent", color: "#64748b", border: "1px dashed #cbd5e1", cursor: "pointer", fontSize: "12px", fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px" }}
+                  >
+                    🏥 I'll Pay in Person (Cash at Clinic)
                   </button>
                 </form>
               </div>

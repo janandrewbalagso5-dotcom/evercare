@@ -45,6 +45,9 @@ export default function App() {
   const [twoFactorUser, setTwoFactorUser] = useState(null);
   const [activePayment, setActivePayment] = useState(null);
 
+  // Used to trigger a data refresh in portals after payment without a full page reload
+  const [portalRefreshKey, setPortalRefreshKey] = useState(0);
+
   // System Crash Simulation State
   const [isCrashed, setIsCrashed] = useState(false);
 
@@ -281,6 +284,7 @@ export default function App() {
         return (
           <PatientPortal
             currentUser={currentUser}
+            refreshKey={portalRefreshKey}
             onInitiatePayment={(apt) => {
               setActivePayment({
                 aptId: apt.id,
@@ -415,12 +419,11 @@ export default function App() {
               sessionData={activePayment}
               onSuccess={() => {
                 setActivePayment(null);
+                setPortalRefreshKey((k) => k + 1);
                 showNotification(
                   "Consultation fee paid successfully!",
                   "success",
                 );
-                // Reload window hash state to update portals
-                window.location.reload();
               }}
               onCancel={() => {
                 setActivePayment(null);
@@ -454,7 +457,7 @@ export default function App() {
           {currentUser ? (
             renderPortal()
           ) : (
-            <LandingPage
+          <LandingPage
               authTab={authTab}
               setAuthTab={setAuthTab}
               email={email}
@@ -473,6 +476,8 @@ export default function App() {
               showNotification={showNotification}
               landingTab={landingTab}
               setLandingTab={setLandingTab}
+              setCurrentUser={setCurrentUser}
+              persistSession={persistSession}
             />
           )}
         </>

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Lock, CheckCircle2, AlertTriangle, X } from "lucide-react";
 
+const IS_DEV = typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "");
+
 export default function TwoFactorModal({ secret, onVerify, onClose, showNotification }) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,6 +60,20 @@ export default function TwoFactorModal({ secret, onVerify, onClose, showNotifica
           <p className="text-xs text-slate-400">
             For secure login verification, we have dispatched a 6-digit passcode OTP directly to your registered email address.
           </p>
+          {/* DEV MODE: show OTP visibly so testing works without real email */}
+          {IS_DEV && (
+            <div style={{
+              background: "#1a2e1a",
+              border: "1px solid #22c55e",
+              borderRadius: 6,
+              padding: "6px 14px",
+              marginTop: 4,
+              width: "100%",
+            }}>
+              <div style={{ fontSize: 10, color: "#86efac", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>🛠 Dev Mode — Your OTP</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#4ade80", letterSpacing: 6, fontFamily: "monospace", marginTop: 2 }}>{secret}</div>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

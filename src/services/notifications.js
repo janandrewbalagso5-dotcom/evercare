@@ -21,6 +21,12 @@ export const notificationService = {
    * @returns {Promise<boolean>} Success status
    */
   sendEmailNotification: async (toEmail, subject, title, message) => {
+    // Guard: skip if not a valid email address (e.g. doctors use short usernames)
+    if (!toEmail || !toEmail.includes("@")) {
+      console.info(`[Notifications] Skipped email — "${toEmail}" is not a valid email address.`);
+      return true;
+    }
+
     console.log(`Notifications: Attempting real email dispatch to: ${toEmail}`);
 
     // Skip real HTTP call on localhost — FormSubmit.co blocks it with CORS

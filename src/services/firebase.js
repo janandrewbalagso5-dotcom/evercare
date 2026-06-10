@@ -1,17 +1,17 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  setDoc, 
-  addDoc, 
-  updateDoc, 
-  query, 
-  where, 
-  orderBy, 
-  Timestamp 
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  setDoc,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  Timestamp
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -26,9 +26,9 @@ const firebaseConfig = {
 };
 
 // Check if valid Firebase configuration is provided
-const isFirebaseConfigured = 
-  firebaseConfig.apiKey && 
-  firebaseConfig.apiKey !== "YOUR_API_KEY" && 
+const isFirebaseConfigured =
+  firebaseConfig.apiKey &&
+  firebaseConfig.apiKey !== "YOUR_API_KEY" &&
   firebaseConfig.projectId;
 
 let app;
@@ -65,7 +65,7 @@ const DEFAULT_DOCTORS = [
     experience: 14,
     fee: 1500,
     avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300",
-    bio: "Dr. Vance is a board-certified Cardiologist with over 14 years of experience specializing in cardiovascular health, preventive cardiology, and non-invasive diagnostics.",
+    bio: "Dr. Elizabeth Vance is a board-certified Cardiologist with over 1 year of experience specializing in cardiovascular health, preventive cardiology, and non-invasive diagnostics.",
     availability: {
       days: ["Monday", "Wednesday", "Friday"],
       hours: ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM"]
@@ -132,9 +132,9 @@ const DEFAULT_DOCTORS = [
 const DEFAULT_USERS = [
   {
     uid: "pat_sample",
-    email: "patient@evercare.com",
+    email: "janandrewbalagso5@gmail.com",
     password: "patient123",
-    name: "Andrew Miller",
+    name: "Go jo",
     role: "patient",
     phone: "+63 917 123 4567",
     gender: "Male",
@@ -155,6 +155,46 @@ const DEFAULT_USERS = [
     twoFactorEnabled: false
   },
   {
+    uid: "doc_sterling",
+    email: "sterling",
+    password: "doctor123",
+    name: "Dr. Marcus Sterling",
+    role: "doctor",
+    phone: "+63 917 111 2222",
+    specialty: "Pediatrics",
+    twoFactorEnabled: false
+  },
+  {
+    uid: "doc_jenkins",
+    email: "jenkins",
+    password: "doctor123",
+    name: "Dr. Sarah Jenkins",
+    role: "doctor",
+    phone: "+63 917 333 4444",
+    specialty: "Dermatology",
+    twoFactorEnabled: false
+  },
+  {
+    uid: "doc_cho",
+    email: "cho",
+    password: "doctor123",
+    name: "Dr. David Cho",
+    role: "doctor",
+    phone: "+63 917 555 6666",
+    specialty: "General Medicine",
+    twoFactorEnabled: false
+  },
+  {
+    uid: "doc_gallagher",
+    email: "gallagher",
+    password: "doctor123",
+    name: "Dr. Fiona Gallagher",
+    role: "doctor",
+    phone: "+63 917 777 8888",
+    specialty: "Orthopedics",
+    twoFactorEnabled: false
+  },
+  {
     uid: "staff_sample",
     email: "staff",
     password: "staff123",
@@ -171,14 +211,15 @@ const DEFAULT_USERS = [
     role: "admin",
     phone: "+63 919 777 8888",
     twoFactorEnabled: false
-  }
+  },
+
 ];
 
 const DEFAULT_APPOINTMENTS = [
   {
     id: "apt_1",
     patientId: "pat_sample",
-    patientName: "Andrew Miller",
+    patientName: "Go jo",
     doctorId: "doc_vance",
     doctorName: "Dr. Elizabeth Vance",
     specialty: "Cardiology",
@@ -195,7 +236,7 @@ const DEFAULT_APPOINTMENTS = [
   {
     id: "apt_2",
     patientId: "pat_sample",
-    patientName: "Andrew Miller",
+    patientName: "Go jo",
     doctorId: "doc_sterling",
     doctorName: "Dr. Marcus Sterling",
     specialty: "Pediatrics",
@@ -216,7 +257,7 @@ const DEFAULT_TRANSACTIONS = [
     id: "txn_1",
     appointmentId: "apt_1",
     patientId: "pat_sample",
-    patientName: "Andrew Miller",
+    patientName: "Go jo",
     amount: 1500,
     paymentMethod: "PayMongo - Card",
     status: "Successful",
@@ -273,17 +314,22 @@ const initMockDB = (force = false) => {
 
 initMockDB();
 
-// Migration: reset users to new credentials on first load with new schema
+// Migration: only reset if users have no password field (truly corrupt data)
 try {
   const localUsers = JSON.parse(localStorage.getItem("evercare_users") || "[]");
-  const needsMigration = localUsers.some(u =>
-    u.email === "janandrewbalagso5@gmail.com" ||
-    u.email === "vance@evercare.com" ||
-    u.email === "staff@evercare.com" ||
-    !u.password
-  );
+  // Only wipe if data is clearly corrupt (missing passwords)
+  const needsMigration = localUsers.length === 0 || localUsers.some(u => !u.password);
   if (needsMigration) {
     localStorage.setItem("evercare_users", JSON.stringify(DEFAULT_USERS));
+  } else {
+    // Migration: add missing doctor accounts (sterling, jenkins, cho, gallagher)
+    const missingDoctorUids = ["doc_sterling", "doc_jenkins", "doc_cho", "doc_gallagher"];
+    const hasMissingDoctors = missingDoctorUids.some(uid => !localUsers.find(u => u.uid === uid));
+    if (hasMissingDoctors) {
+      const existingUids = new Set(localUsers.map(u => u.uid));
+      const newDoctors = DEFAULT_USERS.filter(u => missingDoctorUids.includes(u.uid) && !existingUids.has(u.uid));
+      localStorage.setItem("evercare_users", JSON.stringify([...localUsers, ...newDoctors]));
+    }
   }
 } catch (e) {
   console.warn("Could not migrate user credentials", e);
@@ -341,7 +387,7 @@ export const dbService = {
       const users = JSON.parse(localStorage.getItem("evercare_users") || "[]");
       return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
     }
-    
+
     const q = query(collection(firestore, "users"), where("email", "==", email.toLowerCase()));
     const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) return null;
@@ -408,10 +454,13 @@ export const dbService = {
   // ------------------------------------------
   getDoctors: async () => {
     if (isMock) {
-      return JSON.parse(localStorage.getItem("evercare_doctors") || "[]");
+      const stored = localStorage.getItem("evercare_doctors");
+      const doctors = JSON.parse(stored || JSON.stringify(DEFAULT_DOCTORS));
+      // Ensure each doctor has a uid field matching their id, so doctorId filter works in DoctorPortal
+      return doctors.map(d => ({ ...d, uid: d.uid || d.id }));
     }
     const querySnapshot = await getDocs(collection(firestore, "doctors"));
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, uid: doc.id, ...doc.data() }));
   },
 
   updateDoctorAvailability: async (doctorId, availability) => {
@@ -435,7 +484,8 @@ export const dbService = {
   // ------------------------------------------
   getAppointments: async () => {
     if (isMock) {
-      return JSON.parse(localStorage.getItem("evercare_appointments") || "[]");
+      const stored = localStorage.getItem("evercare_appointments");
+      return JSON.parse(stored || JSON.stringify(DEFAULT_APPOINTMENTS));
     }
     const q = query(collection(firestore, "appointments"), orderBy("date", "asc"));
     const querySnapshot = await getDocs(q);
@@ -468,13 +518,31 @@ export const dbService = {
     return newApt;
   },
 
+  // ------------------------------------------
+  // SLOT CONFLICT CHECK
+  // ------------------------------------------
+  checkSlotAvailability: async (doctorId, date, time, excludeAptId = null) => {
+    const allApts = isMock
+      ? JSON.parse(localStorage.getItem("evercare_appointments") || "[]")
+      : [];
+    const conflict = allApts.find(
+      (a) =>
+        a.doctorId === doctorId &&
+        a.date === date &&
+        a.time === time &&
+        a.status !== "Cancelled" &&
+        a.id !== excludeAptId
+    );
+    return !conflict; // true = slot is available
+  },
+
   updateAppointmentStatus: async (appointmentId, updates) => {
     if (isMock) {
       const appointments = JSON.parse(localStorage.getItem("evercare_appointments") || "[]");
       const index = appointments.findIndex(a => a.id === appointmentId);
       if (index === -1) throw new Error("Appointment not found");
-      appointments[index] = { 
-        ...appointments[index], 
+      appointments[index] = {
+        ...appointments[index],
         ...updates,
         updatedAt: new Date().toISOString()
       };

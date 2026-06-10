@@ -66,6 +66,7 @@ function StatCard({ label, value, icon, iconColor }) {
 /* ── main component ─────────────────────────────────────────── */
 export default function PatientPortal({
   currentUser,
+  refreshKey,
   onInitiatePayment,
   showNotification,
   onLogout,
@@ -102,7 +103,7 @@ export default function PatientPortal({
 
   useEffect(() => {
     loadData();
-  }, [currentUser]);
+  }, [currentUser, refreshKey]);
 
   const loadData = async () => {
     try {
@@ -144,14 +145,30 @@ export default function PatientPortal({
       const aptData = {
         patientId: currentUser.uid,
         patientName: currentUser.name,
-        doctorId: selectedDoctor.id,
+        doctorId: selectedDoctor.uid || selectedDoctor.id,
         doctorName: selectedDoctor.name,
         specialty: selectedDoctor.specialty,
+        department: selectedDoctor.specialty, // pre-populate department
         date: bookingDate,
         time: bookingTime,
         fee: selectedDoctor.fee,
         complaint,
       };
+
+      // Check for slot conflicts before booking
+      const isAvailable = await dbService.checkSlotAvailability(
+        aptData.doctorId,
+        bookingDate,
+        bookingTime
+      );
+      if (!isAvailable) {
+        showNotification(
+          `This time slot (${bookingTime} on ${bookingDate}) is already booked for ${selectedDoctor.name}. Please choose another slot.`,
+          "error"
+        );
+        setBookingLoading(false);
+        return;
+      }
       const newApt = await dbService.bookAppointment(aptData);
       await dbService.logAction(
         currentUser.email,
@@ -227,6 +244,10 @@ export default function PatientPortal({
 
   const pendingApts = appointments.filter((a) => a.status === "Pending");
   const completedApts = appointments.filter((a) => a.status === "Completed");
+  // Appointments that may have prescription/treatment records (Confirmed or Completed)
+  const activeApts = appointments.filter(
+    (a) => a.status === "Completed" || a.status === "Confirmed"
+  );
 
   const getStatusBadge = (status) => {
     const map = {
@@ -1008,7 +1029,7 @@ export default function PatientPortal({
                 <h2 className="adm-panel-title">View Prescription</h2>
               </div>
               <div className="adm-form-card">
-                {completedApts.filter((a) => a.prescription).length === 0 ? (
+                {activeApts.filter((a) => a.prescription || (a.prescriptions && a.prescriptions.length > 0)).length === 0 ? (
                   <div className="adm-empty">
                     No prescriptions available yet.
                   </div>
@@ -1019,28 +1040,45 @@ export default function PatientPortal({
                         <th>#</th>
                         <th>Doctor</th>
                         <th>Date</th>
-                        <th>Prescription (Rx)</th>
-                        <th>Notes</th>
+                        <th>Medicine / Prescription (Rx)</th>
+                        <th>Dosage / Notes</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {completedApts
-                        .filter((a) => a.prescription)
-                        .map((a, i) => (
-                          <tr key={a.id}>
-                            <td>{i + 1}</td>
-                            <td>{a.doctorName}</td>
-                            <td>{a.date}</td>
-                            <td
-                              style={{ fontFamily: "monospace", fontSize: 12 }}
-                            >
-                              {a.prescription}
-                            </td>
-                            <td style={{ fontStyle: "italic", fontSize: 12 }}>
-                              {a.notes || "—"}
-                            </td>
-                          </tr>
-                        ))}
+                      {activeApts
+                        .filter((a) => a.prescription || (a.prescriptions && a.prescriptions.length > 0))
+                        .flatMap((a, i) => {
+                          // If full prescriptions[] array exists, render each entry
+                          if (a.prescriptions && a.prescriptions.length > 0) {
+                            return a.prescriptions.map((rx, j) => (
+                              <tr key={`${a.id}-rx-${j}`}>
+                                <td>{i + j + 1}</td>
+                                <td>{rx.doctor || a.doctorName}</td>
+                                <td>{rx.date || a.date}</td>
+                                <td style={{ fontFamily: "monospace", fontSize: 12 }}>
+                                  {rx.medicine} {rx.unit && `— ${rx.unit}`}
+                                </td>
+                                <td style={{ fontStyle: "italic", fontSize: 12 }}>
+                                  {rx.dosage || "—"}{rx.totalCost ? ` · ₱${rx.totalCost}` : ""}
+                                </td>
+                              </tr>
+                            ));
+                          }
+                          // Fallback: simple string prescription
+                          return [
+                            <tr key={a.id}>
+                              <td>{i + 1}</td>
+                              <td>{a.doctorName}</td>
+                              <td>{a.date}</td>
+                              <td style={{ fontFamily: "monospace", fontSize: 12 }}>
+                                {a.prescription}
+                              </td>
+                              <td style={{ fontStyle: "italic", fontSize: 12 }}>
+                                {a.notes || "—"}
+                              </td>
+                            </tr>
+                          ];
+                        })}
                     </tbody>
                   </table>
                 )}
@@ -1055,7 +1093,7 @@ export default function PatientPortal({
                 <h2 className="adm-panel-title">View Treatment History</h2>
               </div>
               <div className="adm-form-card">
-                {completedApts.length === 0 ? (
+                {activeApts.filter((a) => a.treatmentRecords && a.treatmentRecords.length > 0).length === 0 ? (
                   <div className="adm-empty">
                     No treatment records available.
                   </div>
@@ -1065,29 +1103,31 @@ export default function PatientPortal({
                       <tr>
                         <th>#</th>
                         <th>Doctor</th>
-                        <th>Specialty</th>
+                        <th>Type</th>
+                        <th>Description</th>
                         <th>Date</th>
-                        <th>Complaint</th>
-                        <th>Diagnosis</th>
+                        <th>Cost</th>
                         <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {completedApts.map((a, i) => (
-                        <tr key={a.id}>
-                          <td>{i + 1}</td>
-                          <td>{a.doctorName}</td>
-                          <td>{a.specialty}</td>
-                          <td>{a.date}</td>
-                          <td>{a.complaint || "—"}</td>
-                          <td style={{ fontStyle: "italic", fontSize: 12 }}>
-                            {a.notes || "—"}
-                          </td>
-                          <td>
-                            <span className="adm-badge green">{a.status}</span>
-                          </td>
-                        </tr>
-                      ))}
+                      {activeApts
+                        .filter((a) => a.treatmentRecords && a.treatmentRecords.length > 0)
+                        .flatMap((a, i) =>
+                          a.treatmentRecords.map((t, j) => (
+                            <tr key={`${a.id}-tr-${j}`}>
+                              <td>{i + j + 1}</td>
+                              <td>{t.doctor || a.doctorName}</td>
+                              <td>{t.type}</td>
+                              <td style={{ fontStyle: "italic", fontSize: 12 }}>{t.description || "—"}</td>
+                              <td>{t.date || a.date}</td>
+                              <td>₱{t.cost || "0"}</td>
+                              <td>
+                                <span className="adm-badge green">{a.status}</span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                     </tbody>
                   </table>
                 )}

@@ -324,6 +324,12 @@ export default function DoctorPortal({
     loadData();
   }, [currentUser]);
 
+  // Auto-refresh appointments when navigating to appointment views
+  useEffect(() => {
+    if (activeView === "apt-pending" || activeView === "apt-approved" || activeView === "dashboard") {
+      loadData();
+    }
+  }, [activeView]);
   const loadData = async () => {
     try {
       const allApts = await dbService.getAppointments();
@@ -364,6 +370,17 @@ export default function DoctorPortal({
       prescription: false,
       billing: false,
     });
+
+    // Load any saved treatment/prescription records from the appointment
+    const apt = appointments.find((a) => a.patientId === pat.uid);
+    if (apt) {
+      setTreatmentRecords(apt.treatmentRecords || []);
+      setPrescriptions(apt.prescriptions || []);
+    } else {
+      setTreatmentRecords([]);
+      setPrescriptions([]);
+    }
+
     setActiveView("report-panel");
   };
 
@@ -396,20 +413,20 @@ export default function DoctorPortal({
   };
 
   /* ── treatment ── */
-  const submitTreat = (e) => {
+  const submitTreat = async (e) => {
     e.preventDefault();
-    setTreatmentRecords((p) => [
-      ...p,
-      { id: Date.now(), ...treatForm, doctor: currentUser.name },
-    ]);
-    setTreatForm({
-      type: "",
-      description: "",
-      file: null,
-      date: "",
-      time: "",
-      cost: "",
-    });
+    const newRecord = { id: Date.now(), ...treatForm, doctor: currentUser.name };
+    const updatedRecords = [...treatmentRecords, newRecord];
+    setTreatmentRecords(updatedRecords);
+
+    // ✅ Persist to the appointment in the database
+    if (aptForPatient) {
+      await dbService.updateAppointmentStatus(aptForPatient.id, {
+        treatmentRecords: updatedRecords,
+      });
+    }
+
+    setTreatForm({ type: "", description: "", file: null, date: "", time: "", cost: "" });
     setShowAddTreat(false);
     showNotification("Treatment record added!", "success");
   };
@@ -420,27 +437,30 @@ export default function DoctorPortal({
     setShowPrescStep(2);
   };
   /* ── prescription step 2 ── */
-  const submitPrescMed = (e) => {
+  const submitPrescMed = async (e) => {
     e.preventDefault();
-    setPrescriptions((p) => [
-      ...p,
-      {
-        id: Date.now(),
-        patient: reportPatient?.name,
-        doctor: currentUser.name,
-        date: prescBase.date,
-        ...prescMed,
-      },
-    ]);
+    const newPrescription = {
+      id: Date.now(),
+      patient: reportPatient?.name,
+      doctor: currentUser.name,
+      date: prescBase.date,
+      ...prescMed,
+    };
+    const updatedPrescriptions = [...prescriptions, newPrescription];
+    setPrescriptions(updatedPrescriptions);
+
+    // ✅ Persist to the appointment in the database
+    if (aptForPatient) {
+      await dbService.updateAppointmentStatus(aptForPatient.id, {
+        prescription: `${prescMed.medicine} ${prescMed.dosage}`,  // for PatientPortal display
+        prescriptions: updatedPrescriptions,                        // full records
+        notes: prescMed.dosage || "",
+      });
+    }
+
     setShowPrescStep(null);
     setPrescBase({ date: "" });
-    setPrescMed({
-      medicine: "",
-      cost: "",
-      unit: "",
-      totalCost: "",
-      dosage: "",
-    });
+    setPrescMed({ medicine: "", cost: "", unit: "", totalCost: "", dosage: "" });
     showNotification("Prescription saved!", "success");
   };
 
@@ -761,9 +781,18 @@ export default function DoctorPortal({
             <div className="adm-content-panel">
               <div className="adm-panel-header">
                 <h2 className="adm-panel-title">View Pending Appointments</h2>
-                <span className="adm-badge orange">
-                  {pendingApts.length} Pending
-                </span>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span className="adm-badge orange">
+                    {pendingApts.length} Pending
+                  </span>
+                  <button
+                    className="adm-btn-secondary"
+                    style={{ padding: "5px 14px", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 5 }}
+                    onClick={loadData}
+                  >
+                    🔄 Refresh
+                  </button>
+                </div>
               </div>
               <div className="adm-form-card">
                 <div
@@ -940,9 +969,18 @@ export default function DoctorPortal({
             <div className="adm-content-panel">
               <div className="adm-panel-header">
                 <h2 className="adm-panel-title">View Approved Appointments</h2>
-                <span className="adm-badge green">
-                  {approvedApts.length} Approved
-                </span>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span className="adm-badge green">
+                    {approvedApts.length} Approved
+                  </span>
+                  <button
+                    className="adm-btn-secondary"
+                    style={{ padding: "5px 14px", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 5 }}
+                    onClick={loadData}
+                  >
+                    🔄 Refresh
+                  </button>
+                </div>
               </div>
               <div className="adm-form-card">
                 {approvedApts.length === 0 ? (
@@ -996,7 +1034,7 @@ export default function DoctorPortal({
                             </td>
                             <td>₱{apt.fee}</td>
                             <td>{statusBadge("Confirmed")}</td>
-                            <td>
+                        <td>
                               <button
                                 className="adm-btn-primary"
                                 style={{
@@ -1005,8 +1043,14 @@ export default function DoctorPortal({
                                   display: "inline-flex",
                                   alignItems: "center",
                                   gap: 5,
+                                  opacity: pat ? 1 : 0.5,
+                                  cursor: pat ? "pointer" : "not-allowed",
                                 }}
-                                onClick={() => pat && openReport(pat)}
+                                title={pat ? "Open patient report" : "Patient record not found"}
+                                onClick={() => {
+                                  if (pat) openReport(pat);
+                                  else showNotification("Patient record not found. They may have registered via the appointment form.", "info");
+                                }}
                               >
                                 <Play size={11} style={{ fill: "white" }} />{" "}
                                 Start
@@ -1624,6 +1668,7 @@ export default function DoctorPortal({
               {/* bill header */}
               <table
                 style={{
+                  color: "#6b7280",
                   width: "60%",
                   borderCollapse: "collapse",
                   marginBottom: 20,
@@ -1675,20 +1720,20 @@ export default function DoctorPortal({
                     <td>{new Date().toISOString().split("T")[0]}</td>
                     <td>Consultancy Charge – Dr. {currentUser.name}</td>
                     <td style={{ textAlign: "right" }}>
-                      ${billConsult.toFixed(2)}
+                      ₱{billConsult.toFixed(2)}
                     </td>
                   </tr>
                   <tr>
                     <td>{new Date().toISOString().split("T")[0]}</td>
                     <td>Treatment</td>
                     <td style={{ textAlign: "right" }}>
-                      ${(billTreat || 179).toFixed(2)}
+                      ₱{(billTreat || 0).toFixed(2)}
                     </td>
                   </tr>
                   <tr>
                     <td>{new Date().toISOString().split("T")[0]}</td>
                     <td>Prescription Charge</td>
-                    <td style={{ textAlign: "right" }}>${billRx.toFixed(2)}</td>
+                    <td style={{ textAlign: "right" }}>₱{billRx.toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -1702,10 +1747,10 @@ export default function DoctorPortal({
                 }}
               >
                 {[
-                  ["Bill Amount", `$${billSub.toFixed(1)}`],
-                  ["Tax Amount (5%)", `$${billTax.toFixed(1)}`],
-                  ["Discount", "$0.00"],
-                  ["Grand Total", `$${billGrand.toFixed(1)}`],
+                  ["Bill Amount", `₱${billSub.toFixed(1)}`],
+                  ["Tax Amount (5%)", `₱${billTax.toFixed(1)}`],
+                  ["Discount", "₱0.00"],
+                  ["Grand Total", `₱${billGrand.toFixed(1)}`],
                 ].map(([l, v], i) => (
                   <div
                     key={l}
@@ -1851,15 +1896,19 @@ export default function DoctorPortal({
                     />
                   </FormRow>
                   <FormRow label="Appointment Time" shade>
-                    <input
-                      type="time"
-                      style={inp}
+                    <select
+                      style={sel}
                       value={approvalForm.time}
                       onChange={(e) =>
                         setApprovalForm((p) => ({ ...p, time: e.target.value }))
                       }
                       required
-                    />
+                    >
+                      <option value="">Select Time</option>
+                      {stdHours.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
                   </FormRow>
                   <FormRow label="Appointment reason">
                     <div
@@ -2315,42 +2364,60 @@ export default function DoctorPortal({
                       ))}
                     </select>
                   </FormRow>
-                  <FormRow label="Cost">
+                  <FormRow label="Cost per unit (₱)">
                     <input
                       type="number"
                       style={pinkInp}
                       value={prescMed.cost}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const cost = e.target.value;
+                        const qty = parseInt(prescMed.quantity) || 1;
                         setPrescMed((p) => ({
                           ...p,
-                          cost: e.target.value,
-                          totalCost: e.target.value,
-                        }))
-                      }
+                          cost,
+                          totalCost: (parseFloat(cost) * qty || 0).toFixed(2),
+                        }));
+                      }}
                       required
+                      placeholder="0.00"
                     />
                   </FormRow>
-                  <FormRow label="Unit" shade>
+                  <FormRow label="Quantity" shade>
+                    <input
+                      type="number"
+                      style={inp}
+                      value={prescMed.quantity || ""}
+                      min={1}
+                      onChange={(e) => {
+                        const qty = parseInt(e.target.value) || 1;
+                        const cost = parseFloat(prescMed.cost) || 0;
+                        setPrescMed((p) => ({
+                          ...p,
+                          quantity: e.target.value,
+                          unit: p.unit,
+                          totalCost: (cost * qty).toFixed(2),
+                        }));
+                      }}
+                      placeholder="e.g. 30"
+                    />
+                  </FormRow>
+                  <FormRow label="Unit (tablet/capsule/ml)">
                     <input
                       style={inp}
                       value={prescMed.unit}
                       onChange={(e) =>
                         setPrescMed((p) => ({ ...p, unit: e.target.value }))
                       }
-                      placeholder="e.g. tablet, capsule"
+                      placeholder="e.g. tablet, capsule, ml"
                     />
                   </FormRow>
-                  <FormRow label="Total Cost">
+                  <FormRow label="Total Cost (₱) — auto" shade>
                     <input
                       type="number"
-                      style={pinkInp}
+                      style={{ ...pinkInp, background: "#e8f5e9", borderColor: "#a5d6a7", color: "#1b5e20" }}
                       value={prescMed.totalCost}
-                      onChange={(e) =>
-                        setPrescMed((p) => ({
-                          ...p,
-                          totalCost: e.target.value,
-                        }))
-                      }
+                      readOnly
+                      placeholder="Auto-calculated"
                     />
                   </FormRow>
                   <FormRow label="Dosage" shade>

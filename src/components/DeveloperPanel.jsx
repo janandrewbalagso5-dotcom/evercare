@@ -100,7 +100,7 @@ export default function DeveloperPanel({
               <User size={14} className="mr-1.5" /> Patient (Andrew)
             </button>
             <button
-              onClick={() => handleRoleSwitch("vance@evercare.com")}
+              onClick={() => handleRoleSwitch("doctor")}
               className={`dev-btn ${currentUser?.role === "doctor" ? "active" : ""}`}
             >
               <User size={14} className="mr-1.5" /> Doctor (Dr. Vance)
@@ -109,7 +109,7 @@ export default function DeveloperPanel({
               onClick={() => handleRoleSwitch("staff@evercare.com")}
               className={`dev-btn ${currentUser?.role === "staff" ? "active" : ""}`}
             >
-              <User size={14} className="mr-1.5" /> Staff (Sarah)
+              <User size={14} className="mr-1.5" /> Medical Staff (Sarah)
             </button>
             <button
               onClick={() => handleRoleSwitch("janandrewbalagso5@gmail.com")}

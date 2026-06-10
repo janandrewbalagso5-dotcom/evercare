@@ -79,6 +79,8 @@ export default function LandingPage({
   showNotification,
   landingTab,
   setLandingTab,
+  setCurrentUser,
+  persistSession,
 }) {
   const [doctors, setDoctors] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -215,7 +217,14 @@ export default function LandingPage({
         `Appointment booked with ${selectedDoc.name} for ${guestAptForm.date} at ${guestAptForm.time}`,
       );
 
-      setAptSubmitted(true);
+      // 6. Auto-login: directly set the current user so they land in their portal
+      if (setCurrentUser && persistSession) {
+        setCurrentUser(patientUser);
+        persistSession(patientUser);
+        showNotification(`Welcome, ${patientUser.name}! Your appointment has been booked.`, "success");
+      } else {
+        setAptSubmitted(true);
+      }
     } catch (err) {
       showNotification("Failed to submit appointment: " + err.message, "error");
     } finally {
@@ -228,6 +237,7 @@ export default function LandingPage({
     setAptSubmitted(false);
     setEmail(guestAptForm.loginId);
     setPassword(guestAptForm.password);
+    setRegisterRole && setRegisterRole("patient");
     setLandingTab("login");
     setAuthTab("login");
   };
@@ -1009,7 +1019,7 @@ export default function LandingPage({
                       : loginRole === "doctor"
                         ? "Doctor!"
                         : loginRole === "staff"
-                          ? "Staff!"
+                          ? "Medical Staff!"
                           : "Patient!"
                     }`}
                 </p>
@@ -1032,7 +1042,7 @@ export default function LandingPage({
                     >
                       <option value="admin">Admin</option>
                       <option value="doctor">Doctor</option>
-                      <option value="staff">Staff</option>
+                      <option value="staff">Medical Staff</option>
                       <option value="patient">Patient</option>
                     </select>
                   </div>
