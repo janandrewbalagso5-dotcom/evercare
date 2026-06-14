@@ -692,31 +692,6 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
             </div>
           )}
 
-          {/* ===== MANAGE SERVICES ===== */}
-          {activeView === "view-services" && (
-            <div className="adm-content-panel">
-              <div className="adm-panel-header">
-                <h2 className="adm-panel-title">Manage Hospital Services</h2>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
-                {/* Departments */}
-                <div className="adm-form-card">
-                  <h3 className="adm-panel-sub" style={{ fontWeight: "bold", marginBottom: "10px" }}>Departments (Specialties)</h3>
-                  <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
-                    <input type="text" className="adm-input" placeholder="e.g. Neurology" id="new-dept"
-                      onKeyPress={(e) => { if (e.key === "Enter") { const v = e.target.value; if (v) { setSettings(s => ({ ...s, departments: [...(s.departments || []), v] })); e.target.value = ""; } } }}
-                    />
-                    <button className="adm-btn-primary" onClick={() => { const el = document.getElementById("new-dept"); if (el.value) { setSettings(s => ({ ...s, departments: [...(s.departments || []), el.value] })); el.value = ""; } }}>+</button>
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                    {(settings.departments || []).map((d, i) => (
-                      <span key={i} style={{ background: "#f1f5f9", padding: "4px 10px", borderRadius: "15px", fontSize: "13px", display: "flex", alignItems: "center", gap: "5px" }}>
-                        {d} <X size={12} style={{ cursor: "pointer" }} onClick={() => setSettings(s => ({ ...s, departments: s.departments.filter((_, idx) => idx !== i) }))} />
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Treatments */}
                 <div className="adm-form-card">
                   <h3 className="adm-panel-sub" style={{ fontWeight: "bold", marginBottom: "10px" }}>Treatment Types</h3>
