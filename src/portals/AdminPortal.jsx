@@ -368,7 +368,9 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
             <NavItem label="Departments" active={activeView === "view-department"} onClick={() => nav("view-department")} />
             <NavItem label="Add Department" active={activeView === "add-department"} onClick={() => nav("add-department")} />
             <NavItem label="Treatment Types" active={activeView === "view-treatment"} onClick={() => nav("view-treatment")} />
+            <NavItem label="Add Treatment" active={activeView === "add-treatment"} onClick={() => nav("add-treatment")} />
             <NavItem label="Medicines" active={activeView === "view-medicine"} onClick={() => nav("view-medicine")} />
+            <NavItem label="Add Medicine" active={activeView === "add-medicine"} onClick={() => nav("add-medicine")} />
           </NavGroup>
         </aside>
 
@@ -687,59 +689,6 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                     </tbody>
                   </table>
                 </div>
-              </div>
-            </div>
-          )}
-
-                {/* Treatments */}
-                <div className="adm-form-card">
-                  <h3 className="adm-panel-sub" style={{ fontWeight: "bold", marginBottom: "10px" }}>Treatment Types</h3>
-                  <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
-                    <input type="text" className="adm-input" placeholder="e.g. X-Ray" id="new-treat"
-                      onKeyPress={(e) => { if (e.key === "Enter") { const v = e.target.value; if (v) { setSettings(s => ({ ...s, treatments: [...(s.treatments || []), v] })); e.target.value = ""; } } }}
-                    />
-                    <button className="adm-btn-primary" onClick={() => { const el = document.getElementById("new-treat"); if (el.value) { setSettings(s => ({ ...s, treatments: [...(s.treatments || []), el.value] })); el.value = ""; } }}>+</button>
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                    {(settings.treatments || []).map((t, i) => (
-                      <span key={i} style={{ background: "#f1f5f9", padding: "4px 10px", borderRadius: "15px", fontSize: "13px", display: "flex", alignItems: "center", gap: "5px" }}>
-                        {t} <X size={12} style={{ cursor: "pointer" }} onClick={() => setSettings(s => ({ ...s, treatments: s.treatments.filter((_, idx) => idx !== i) }))} />
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Medicines */}
-                <div className="adm-form-card">
-                  <h3 className="adm-panel-sub" style={{ fontWeight: "bold", marginBottom: "10px" }}>Pharmacy / Medicines</h3>
-                  <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
-                    <input type="text" className="adm-input" placeholder="e.g. Paracetamol 500mg" id="new-med"
-                      onKeyPress={(e) => { if (e.key === "Enter") { const v = e.target.value; if (v) { setSettings(s => ({ ...s, medicines: [...(s.medicines || []), v] })); e.target.value = ""; } } }}
-                    />
-                    <button className="adm-btn-primary" onClick={() => { const el = document.getElementById("new-med"); if (el.value) { setSettings(s => ({ ...s, medicines: [...(s.medicines || []), el.value] })); el.value = ""; } }}>+</button>
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                    {(settings.medicines || []).map((m, i) => (
-                      <span key={i} style={{ background: "#f1f5f9", padding: "4px 10px", borderRadius: "15px", fontSize: "13px", display: "flex", alignItems: "center", gap: "5px" }}>
-                        {m} <X size={12} style={{ cursor: "pointer" }} onClick={() => setSettings(s => ({ ...s, medicines: s.medicines.filter((_, idx) => idx !== i) }))} />
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div style={{ marginTop: "20px" }}>
-                <button className="adm-btn-primary" style={{ width: "100%", padding: "12px" }}
-                  onClick={async () => {
-                    try {
-                      await dbService.updateSystemSettings(settings);
-                      showNotification("Hospital services updated successfully!", "success");
-                    } catch (e) {
-                      showNotification("Update failed: " + e.message, "error");
-                    }
-                  }}
-                >
-                  Save All Changes
-                </button>
               </div>
             </div>
           )}
