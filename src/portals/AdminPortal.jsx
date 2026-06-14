@@ -27,7 +27,7 @@ import {
   CheckCircle,
   XCircle,
   Bell,
-}from "lucide-react";
+} from "lucide-react";
 import { dbService } from "../services/firebase";
 import { notificationService } from "../services/notifications";
 
@@ -71,6 +71,11 @@ function StatCard({ label, value, icon, iconColor }) {
     </div>
   );
 }
+
+const specialties = [
+  "Cardiology", "Pediatrics", "Dermatology", "General Medicine",
+  "Orthopedics", "Neurology", "Ophthalmology", "ENT", "Psychiatry", "Oncology",
+];
 
 export default function AdminPortal({ currentUser, showNotification, onLogout }) {
   const [activeView, setActiveView] = useState("dashboard");
@@ -142,7 +147,10 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
       const pats = await dbService.getPatients();
       const lg = await dbService.getSystemLogs();
       const cfg = await dbService.getSystemSettings();
-      setDoctors(docs); setPatients(pats); setAppointments(apts); setLogs(lg);
+      setDoctors(docs);
+      setPatients(pats);
+      setAppointments(apts);
+      setLogs(lg);
       if (cfg && Object.keys(cfg).length > 0) setSettings(cfg);
       const earning = txns.reduce((s, t) => s + t.amount, 0);
       setStats({ patients: pats.length, doctors: docs.length, admins: 1, earning });
@@ -197,7 +205,11 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
   const handleAddPatient = async (e) => {
     e.preventDefault(); setPatLoading(true);
     try {
-      await dbService.createUser({ uid: "pat_" + Date.now(), email: newPat.email, password: "patient123", name: newPat.name, role: "patient", phone: newPat.phone, gender: newPat.gender, dob: newPat.dob, address: newPat.address, bloodType: "O+" });
+      await dbService.createUser({
+        uid: "pat_" + Date.now(), email: newPat.email, password: "patient123",
+        name: newPat.name, role: "patient", phone: newPat.phone,
+        gender: newPat.gender, dob: newPat.dob, address: newPat.address, bloodType: "O+",
+      });
       showNotification("Patient added successfully!", "success");
       setNewPat({ name: "", email: "", phone: "", gender: "Male", dob: "", address: "" });
       loadData(); setActiveView("view-patient");
@@ -355,10 +367,12 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
           <NavGroup icon={<Database size={16} />} label="Services" isOpen={openNavGroup === "services"} onToggle={() => toggleNavGroup("services")}>
             <NavItem label="Manage Services" active={activeView === "view-services"} onClick={() => nav("view-services")} />
             <NavItem label="Departments" active={activeView === "view-department"} onClick={() => nav("view-department")} />
+            <NavItem label="Add Department" active={activeView === "add-department"} onClick={() => nav("add-department")} />
             <NavItem label="Treatment Types" active={activeView === "view-treatment"} onClick={() => nav("view-treatment")} />
             <NavItem label="Medicines" active={activeView === "view-medicine"} onClick={() => nav("view-medicine")} />
           </NavGroup>
-          </aside>
+        </aside>
+
         <main className="adm-main">
 
           {/* ===== DASHBOARD ===== */}
@@ -375,7 +389,7 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                   <StatCard label="Total Patient" value={stats.patients} icon={<Users size={36} />} iconColor="#e91e8c" />
                   <StatCard label="Total Doctor" value={stats.doctors} icon={<UserCog size={36} />} iconColor="#17a2b8" />
                   <StatCard label="Total Administrator" value={stats.admins} icon={<ShieldAlert size={36} />} iconColor="#3f51b5" />
-                  <StatCard label="Hospital Earning" value={`$ ${stats.earning.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} icon={<DollarSign size={36} />} iconColor="#28a745" />
+                  <StatCard label="Hospital Earning" value={`₱ ${stats.earning.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} icon={<DollarSign size={36} />} iconColor="#28a745" />
                 </div>
               </div>
             </div>
@@ -464,7 +478,9 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
               <div className="adm-panel-header"><h2 className="adm-panel-title">Pending Appointments</h2></div>
               <div className="adm-form-card">
                 <div className="adm-table-scroll">
-                  {pendingApts.length === 0 ? <div className="adm-empty">No pending appointments.</div> : (
+                  {pendingApts.length === 0 ? (
+                    <div className="adm-empty">No pending appointments.</div>
+                  ) : (
                     <table className="adm-table">
                       <thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
                       <tbody>
@@ -498,7 +514,9 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
               <div className="adm-panel-header"><h2 className="adm-panel-title">Approved Appointments</h2></div>
               <div className="adm-form-card">
                 <div className="adm-table-scroll">
-                  {approvedApts.length === 0 ? <div className="adm-empty">No approved appointments.</div> : (
+                  {approvedApts.length === 0 ? (
+                    <div className="adm-empty">No approved appointments.</div>
+                  ) : (
                     <table className="adm-table">
                       <thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th>Notify</th></tr></thead>
                       <tbody>
@@ -551,7 +569,9 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                   <table className="adm-table">
                     <thead><tr><th>#</th><th>Photo</th><th>Name</th><th>Specialty</th><th>Fee</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
                     <tbody>
-                      {doctors.length === 0 ? <tr><td colSpan={6}><div className="adm-empty">No doctors found.</div></td></tr> : doctors.map((doc, i) => (
+                      {doctors.length === 0 ? (
+                        <tr><td colSpan={6}><div className="adm-empty">No doctors found.</div></td></tr>
+                      ) : doctors.map((doc, i) => (
                         <tr key={doc.id}>
                           <td>{i + 1}</td>
                           <td><img src={doc.avatar} alt={doc.name} className="adm-table-avatar" /></td>
@@ -561,7 +581,7 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                           <td style={{ textAlign: "right" }}>
                             <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
                               <button className="adm-btn-primary" style={{ padding: "5px 10px", fontSize: 12, background: "#0d6efd", display: "flex", alignItems: "center", gap: 4 }} onClick={() => { setEditDoc({ ...doc }); setActiveView("edit-doctor"); }}><Pencil size={13} /> Edit</button>
-                              <button className="adm-btn-secondary" style={{ padding: "5px 10px", fontSize: 12, background: "#dc3545", display: "flex", alignItems: "center", gap: 4 }} onClick={() => handleDeleteDoctor(doc.id)}><Trash2 size={13} /> Delete</button>
+                              <button className="adm-btn-secondary" style={{ padding: "5px 10px", fontSize: 12, background: "#dc3545", color: "#fff", display: "flex", alignItems: "center", gap: 4 }} onClick={() => handleDeleteDoctor(doc.id)}><Trash2 size={13} /> Delete</button>
                             </div>
                           </td>
                         </tr>
@@ -604,7 +624,10 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                       <tbody>
                         {doctors.map((doc, i) => (
                           <tr key={doc.id}>
-                            <td>{i + 1}</td><td><img src={doc.avatar} alt={doc.name} className="adm-table-avatar" /></td><td>{doc.name}</td><td>{doc.specialty}</td>
+                            <td>{i + 1}</td>
+                            <td><img src={doc.avatar} alt={doc.name} className="adm-table-avatar" /></td>
+                            <td>{doc.name}</td>
+                            <td>{doc.specialty}</td>
                             <td><button className="adm-btn-primary" style={{ padding: "4px 12px", fontSize: 12 }} onClick={() => setEditDoc({ ...doc })}>Select</button></td>
                           </tr>
                         ))}
@@ -643,36 +666,52 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                 <h2 className="adm-panel-title">View Patient Record</h2>
                 <button className="adm-btn-primary" onClick={() => setActiveView("add-patient")}>+ Add Patient</button>
               </div>
+              <div className="adm-form-card">
+                <div className="adm-table-scroll">
+                  <table className="adm-table">
+                    <thead>
+                      <tr><th>#</th><th>Name</th><th>Email</th><th>Gender</th><th>Phone</th><th>Blood Type</th></tr>
+                    </thead>
+                    <tbody>
+                      {patients.length === 0 ? (
+                        <tr><td colSpan={6}><div className="adm-empty">No patients found.</div></td></tr>
+                      ) : patients.map((p, i) => (
+                        <tr key={p.uid || i}>
+                          <td>{i + 1}</td>
+                          <td>{p.name}</td>
+                          <td>{p.email}</td>
+                          <td>{p.gender || "—"}</td>
+                          <td>{p.phone || "—"}</td>
+                          <td>{p.bloodType || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-      )}
+          )}
+
           {/* ===== MANAGE SERVICES ===== */}
           {activeView === "view-services" && (
             <div className="adm-content-panel">
               <div className="adm-panel-header">
                 <h2 className="adm-panel-title">Manage Hospital Services</h2>
               </div>
-
-              <div className="adm-form-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
                 {/* Departments */}
                 <div className="adm-form-card">
                   <h3 className="adm-panel-sub" style={{ fontWeight: "bold", marginBottom: "10px" }}>Departments (Specialties)</h3>
                   <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
-                    <input
-                      type="text"
-                      className="adm-input"
-                      placeholder="e.g. Neurology"
-                      id="new-dept"
-                      onKeyPress={(e) => { if(e.key === "Enter") { const v = e.target.value; if(v) { setSettings(s => ({...s, departments: [...(s.departments||[]), v]})); e.target.value = ""; } } }}
+                    <input type="text" className="adm-input" placeholder="e.g. Neurology" id="new-dept"
+                      onKeyPress={(e) => { if (e.key === "Enter") { const v = e.target.value; if (v) { setSettings(s => ({ ...s, departments: [...(s.departments || []), v] })); e.target.value = ""; } } }}
                     />
-                    <button
-                      className="adm-btn-primary"
-                      onClick={() => { const el = document.getElementById("new-dept"); if(el.value) { setSettings(s => ({...s, departments: [...(s.departments||[]), el.value]})); el.value = ""; } }}
-                    >+</button>
+                    <button className="adm-btn-primary" onClick={() => { const el = document.getElementById("new-dept"); if (el.value) { setSettings(s => ({ ...s, departments: [...(s.departments || []), el.value] })); el.value = ""; } }}>+</button>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {(settings.departments || []).map((d, i) => (
                       <span key={i} style={{ background: "#f1f5f9", padding: "4px 10px", borderRadius: "15px", fontSize: "13px", display: "flex", alignItems: "center", gap: "5px" }}>
-                        {d} <X size={12} style={{ cursor: "pointer" }} onClick={() => setSettings(s => ({...s, departments: s.departments.filter((_, idx) => idx !== i)}))} />
+                        {d} <X size={12} style={{ cursor: "pointer" }} onClick={() => setSettings(s => ({ ...s, departments: s.departments.filter((_, idx) => idx !== i) }))} />
                       </span>
                     ))}
                   </div>
@@ -682,22 +721,15 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                 <div className="adm-form-card">
                   <h3 className="adm-panel-sub" style={{ fontWeight: "bold", marginBottom: "10px" }}>Treatment Types</h3>
                   <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
-                    <input
-                      type="text"
-                      className="adm-input"
-                      placeholder="e.g. X-Ray"
-                      id="new-treat"
-                      onKeyPress={(e) => { if(e.key === "Enter") { const v = e.target.value; if(v) { setSettings(s => ({...s, treatments: [...(s.treatments||[]), v]})); e.target.value = ""; } } }}
+                    <input type="text" className="adm-input" placeholder="e.g. X-Ray" id="new-treat"
+                      onKeyPress={(e) => { if (e.key === "Enter") { const v = e.target.value; if (v) { setSettings(s => ({ ...s, treatments: [...(s.treatments || []), v] })); e.target.value = ""; } } }}
                     />
-                    <button
-                      className="adm-btn-primary"
-                      onClick={() => { const el = document.getElementById("new-treat"); if(el.value) { setSettings(s => ({...s, treatments: [...(s.treatments||[]), el.value]})); el.value = ""; } }}
-                    >+</button>
+                    <button className="adm-btn-primary" onClick={() => { const el = document.getElementById("new-treat"); if (el.value) { setSettings(s => ({ ...s, treatments: [...(s.treatments || []), el.value] })); el.value = ""; } }}>+</button>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {(settings.treatments || []).map((t, i) => (
                       <span key={i} style={{ background: "#f1f5f9", padding: "4px 10px", borderRadius: "15px", fontSize: "13px", display: "flex", alignItems: "center", gap: "5px" }}>
-                        {t} <X size={12} style={{ cursor: "pointer" }} onClick={() => setSettings(s => ({...s, treatments: s.treatments.filter((_, idx) => idx !== i)}))} />
+                        {t} <X size={12} style={{ cursor: "pointer" }} onClick={() => setSettings(s => ({ ...s, treatments: s.treatments.filter((_, idx) => idx !== i) }))} />
                       </span>
                     ))}
                   </div>
@@ -707,32 +739,22 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                 <div className="adm-form-card">
                   <h3 className="adm-panel-sub" style={{ fontWeight: "bold", marginBottom: "10px" }}>Pharmacy / Medicines</h3>
                   <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
-                    <input
-                      type="text"
-                      className="adm-input"
-                      placeholder="e.g. Paracetamol 500mg"
-                      id="new-med"
-                      onKeyPress={(e) => { if(e.key === "Enter") { const v = e.target.value; if(v) { setSettings(s => ({...s, medicines: [...(s.medicines||[]), v]})); e.target.value = ""; } } }}
+                    <input type="text" className="adm-input" placeholder="e.g. Paracetamol 500mg" id="new-med"
+                      onKeyPress={(e) => { if (e.key === "Enter") { const v = e.target.value; if (v) { setSettings(s => ({ ...s, medicines: [...(s.medicines || []), v] })); e.target.value = ""; } } }}
                     />
-                    <button
-                      className="adm-btn-primary"
-                      onClick={() => { const el = document.getElementById("new-med"); if(el.value) { setSettings(s => ({...s, medicines: [...(s.medicines||[]), el.value]})); el.value = ""; } }}
-                    >+</button>
+                    <button className="adm-btn-primary" onClick={() => { const el = document.getElementById("new-med"); if (el.value) { setSettings(s => ({ ...s, medicines: [...(s.medicines || []), el.value] })); el.value = ""; } }}>+</button>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {(settings.medicines || []).map((m, i) => (
                       <span key={i} style={{ background: "#f1f5f9", padding: "4px 10px", borderRadius: "15px", fontSize: "13px", display: "flex", alignItems: "center", gap: "5px" }}>
-                        {m} <X size={12} style={{ cursor: "pointer" }} onClick={() => setSettings(s => ({...s, medicines: s.medicines.filter((_, idx) => idx !== i)}))} />
+                        {m} <X size={12} style={{ cursor: "pointer" }} onClick={() => setSettings(s => ({ ...s, medicines: s.medicines.filter((_, idx) => idx !== i) }))} />
                       </span>
                     ))}
                   </div>
                 </div>
               </div>
-
               <div style={{ marginTop: "20px" }}>
-                <button
-                  className="adm-btn-primary"
-                  style={{ width: "100%", padding: "12px" }}
+                <button className="adm-btn-primary" style={{ width: "100%", padding: "12px" }}
                   onClick={async () => {
                     try {
                       await dbService.updateSystemSettings(settings);
@@ -744,20 +766,6 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                 >
                   Save All Changes
                 </button>
-              </div>
-            </div>
-          )}
-              <div className="adm-form-card">
-                <div className="adm-table-scroll">
-                  <table className="adm-table">
-                    <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Gender</th><th>Phone</th><th>Blood Type</th></tr></thead>
-                    <tbody>
-                      {patients.map((p, i) => (
-                        <tr key={p.uid || i}><td>{i + 1}</td><td>{p.name}</td><td>{p.email}</td><td>{p.gender || "—"}</td><td>{p.phone || "—"}</td><td>{p.bloodType || "—"}</td></tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
               </div>
             </div>
           )}
@@ -788,9 +796,13 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                   <table className="adm-table">
                     <thead><tr><th>#</th><th>Department Name</th><th>Description</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
                     <tbody>
-                      {departments.length === 0 ? <tr><td colSpan={4}><div className="adm-empty">No departments found.</div></td></tr> : departments.map((dep, i) => (
+                      {departments.length === 0 ? (
+                        <tr><td colSpan={4}><div className="adm-empty">No departments found.</div></td></tr>
+                      ) : departments.map((dep, i) => (
                         <tr key={dep.id}>
-                          <td>{i + 1}</td><td style={{ fontWeight: 600 }}>{dep.name}</td><td>{dep.description || "—"}</td>
+                          <td>{i + 1}</td>
+                          <td style={{ fontWeight: 600 }}>{dep.name}</td>
+                          <td>{dep.description || "—"}</td>
                           <td style={{ textAlign: "right" }}>
                             <button onClick={() => handleDeleteDepartment(dep.id)} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: "6px", border: "none", background: "#fee2e2", color: "#991b1b", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>
                               <Trash2 size={13} /> Delete
@@ -835,9 +847,13 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                   <table className="adm-table">
                     <thead><tr><th>#</th><th>Treatment Type</th><th>Cost</th><th>Status</th><th>Note</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
                     <tbody>
-                      {treatmentTypes.length === 0 ? <tr><td colSpan={6}><div className="adm-empty">No treatment types found.</div></td></tr> : treatmentTypes.map((t, i) => (
+                      {treatmentTypes.length === 0 ? (
+                        <tr><td colSpan={6}><div className="adm-empty">No treatment types found.</div></td></tr>
+                      ) : treatmentTypes.map((t, i) => (
                         <tr key={t.id}>
-                          <td>{i + 1}</td><td style={{ fontWeight: 600 }}>{t.name}</td><td>₱{Number(t.cost).toLocaleString()}</td>
+                          <td>{i + 1}</td>
+                          <td style={{ fontWeight: 600 }}>{t.name}</td>
+                          <td>₱{Number(t.cost).toLocaleString()}</td>
                           <td><span className={`adm-badge ${t.status === "Active" ? "green" : "orange"}`}>{t.status}</span></td>
                           <td>{t.note || "—"}</td>
                           <td style={{ textAlign: "right" }}>
@@ -884,9 +900,14 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                   <table className="adm-table">
                     <thead><tr><th>#</th><th>Medicine Name</th><th>Type</th><th>Stock</th><th>Status</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
                     <tbody>
-                      {medicines.length === 0 ? <tr><td colSpan={6}><div className="adm-empty">No medicines found.</div></td></tr> : medicines.map((m, i) => (
+                      {medicines.length === 0 ? (
+                        <tr><td colSpan={6}><div className="adm-empty">No medicines found.</div></td></tr>
+                      ) : medicines.map((m, i) => (
                         <tr key={m.id}>
-                          <td>{i + 1}</td><td style={{ fontWeight: 600 }}>{m.name}</td><td>{m.type}</td><td>{m.stock}</td>
+                          <td>{i + 1}</td>
+                          <td style={{ fontWeight: 600 }}>{m.name}</td>
+                          <td>{m.type}</td>
+                          <td>{m.stock}</td>
                           <td><span className={`adm-badge ${m.status === "Available" ? "green" : m.status === "Low Stock" ? "orange" : "red"}`}>{m.status}</span></td>
                           <td style={{ textAlign: "right" }}>
                             <button onClick={() => handleDeleteMedicine(m.id)} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: "6px", border: "none", background: "#fee2e2", color: "#991b1b", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>
