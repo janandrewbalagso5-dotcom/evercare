@@ -346,7 +346,7 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
             <NavItem label="View Doctor" active={activeView === "view-doctor"} onClick={() => nav("view-doctor")} />
             <NavItem label="Edit Doctor" active={activeView === "edit-doctor"} onClick={() => nav("edit-doctor")} />
           </NavGroup>
-          </NavGroup>
+          </aside>
         <main className="adm-main">
 
           {/* ===== DASHBOARD ===== */}
