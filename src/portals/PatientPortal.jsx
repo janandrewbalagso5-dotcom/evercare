@@ -683,13 +683,7 @@ export default function PatientPortal({
                                 <h2 className="adm-panel-title">Add Appointment</h2>
                             </div>
 
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "1fr 340px",
-                                    gap: 20,
-                                }}
-                            >
+                                <div className="apt-booking-grid">
                                 {/* Doctor selection */}
                                 <div className="adm-form-card">
                                     <div
