@@ -1,530 +1,79 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  doc,
-  getDocs,
-  getDoc,
-  setDoc,
-  addDoc,
-  updateDoc,
-  query,
-  where,
-  orderBy,
-  Timestamp
-} from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+// EverCare - API Service Layer
+// Replaces direct Firebase calls with Express backend API calls
 
-// Web App's Firebase configuration
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-// Check if valid Firebase configuration is provided
-const isFirebaseConfigured =
-  firebaseConfig.apiKey &&
-  firebaseConfig.apiKey !== "YOUR_API_KEY" &&
-  firebaseConfig.projectId;
-
-let app;
-let firestore;
-let storage;
-let isMock = true;
-
-if (isFirebaseConfigured) {
-  try {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    firestore = getFirestore(app);
-    storage = getStorage(app);
-    isMock = false;
-    console.log("EverCare: Firebase services initialized successfully.");
-  } catch (error) {
-    console.error("EverCare: Firebase initialization failed, falling back to mock localStorage db.", error);
-    isMock = true;
-  }
-} else {
-  console.log("EverCare: Missing Firebase configurations. Operating in Mock LocalStorage Mode.");
-  isMock = true;
-}
-
-// ==========================================
-// MOCK DATABASE & SEED DATA (LOCAL STORAGE)
-// ==========================================
-
-const DEFAULT_DOCTORS = [
-  {
-    id: "doc_vance",
-    name: "Dr. Elizabeth Vance",
-    specialty: "Cardiology",
-    rating: 4.9,
-    experience: 14,
-    fee: 1500,
-    avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300",
-    bio: "Dr. Elizabeth Vance is a board-certified Cardiologist with over 1 year of experience specializing in cardiovascular health, preventive cardiology, and non-invasive diagnostics.",
-    availability: {
-      days: ["Monday", "Wednesday", "Friday"],
-      hours: ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM"]
-    }
-  },
-  {
-    id: "doc_sterling",
-    name: "Dr. Marcus Sterling",
-    specialty: "Pediatrics",
-    rating: 4.8,
-    experience: 10,
-    fee: 1200,
-    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300",
-    bio: "Dr. Sterling is dedicated to providing compassionate healthcare for infants, children, and adolescents, specializing in pediatric growth development and immunizations.",
-    availability: {
-      days: ["Tuesday", "Thursday", "Saturday"],
-      hours: ["10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM"]
-    }
-  },
-  {
-    id: "doc_jenkins",
-    name: "Dr. Sarah Jenkins",
-    specialty: "Dermatology",
-    rating: 4.7,
-    experience: 8,
-    fee: 1300,
-    avatar: "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300",
-    bio: "Dr. Jenkins specializes in medical, surgical, and cosmetic dermatology, helping patients manage acne, eczema, skin oncology, and aging skin concerns.",
-    availability: {
-      days: ["Monday", "Thursday"],
-      hours: ["01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"]
-    }
-  },
-  {
-    id: "doc_cho",
-    name: "Dr. David Cho",
-    specialty: "General Medicine",
-    rating: 4.6,
-    experience: 12,
-    fee: 1000,
-    avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300",
-    bio: "Dr. Cho provides comprehensive healthcare for families, specializing in chronic disease management, general diagnostics, and overall health maintenance.",
-    availability: {
-      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      hours: ["08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM"]
-    }
-  },
-  {
-    id: "doc_gallagher",
-    name: "Dr. Fiona Gallagher",
-    specialty: "Orthopedics",
-    rating: 4.9,
-    experience: 16,
-    fee: 1800,
-    avatar: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300",
-    bio: "Dr. Gallagher specializes in orthopedic surgery, joint replacements, sports medicine, and treating complex musculoskeletal injuries and disorders.",
-    availability: {
-      days: ["Wednesday", "Friday"],
-      hours: ["02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM"]
-    }
-  }
-];
-
-const DEFAULT_USERS = [
-  {
-    uid: "pat_sample",
-    email: "janandrewbalagso5@gmail.com",
-    password: "patient123",
-    name: "Go jo",
-    role: "patient",
-    phone: "+63 917 123 4567",
-    gender: "Male",
-    dob: "1992-08-15",
-    bloodType: "O+",
-    address: "123 Healthcare Blvd, Manila",
-    twoFactorEnabled: true,
-    twoFactorSecret: "123456"
-  },
-  {
-    uid: "doc_vance",
-    email: "doctor",
-    password: "doctor123",
-    name: "Dr. Elizabeth Vance",
-    role: "doctor",
-    phone: "+63 917 987 6543",
-    specialty: "Cardiology",
-    twoFactorEnabled: false
-  },
-  {
-    uid: "doc_sterling",
-    email: "sterling",
-    password: "doctor123",
-    name: "Dr. Marcus Sterling",
-    role: "doctor",
-    phone: "+63 917 111 2222",
-    specialty: "Pediatrics",
-    twoFactorEnabled: false
-  },
-  {
-    uid: "doc_jenkins",
-    email: "jenkins",
-    password: "doctor123",
-    name: "Dr. Sarah Jenkins",
-    role: "doctor",
-    phone: "+63 917 333 4444",
-    specialty: "Dermatology",
-    twoFactorEnabled: false
-  },
-  {
-    uid: "doc_cho",
-    email: "cho",
-    password: "doctor123",
-    name: "Dr. David Cho",
-    role: "doctor",
-    phone: "+63 917 555 6666",
-    specialty: "General Medicine",
-    twoFactorEnabled: false
-  },
-  {
-    uid: "doc_gallagher",
-    email: "gallagher",
-    password: "doctor123",
-    name: "Dr. Fiona Gallagher",
-    role: "doctor",
-    phone: "+63 917 777 8888",
-    specialty: "Orthopedics",
-    twoFactorEnabled: false
-  },
-  {
-    uid: "staff_sample",
-    email: "staff",
-    password: "staff123",
-    name: "Sarah Conner",
-    role: "staff",
-    phone: "+63 918 222 3333",
-    twoFactorEnabled: false
-  },
-  {
-    uid: "admin_sample",
-    email: "admin",
-    password: "admin123",
-    name: "Super Administrator",
-    role: "admin",
-    phone: "+63 919 777 8888",
-    twoFactorEnabled: false
-  },
-
-];
-
-const DEFAULT_APPOINTMENTS = [
-  {
-    id: "apt_1",
-    patientId: "pat_sample",
-    patientName: "Go jo",
-    doctorId: "doc_vance",
-    doctorName: "Dr. Elizabeth Vance",
-    specialty: "Cardiology",
-    date: "2026-06-08",
-    time: "10:00 AM",
-    status: "Confirmed",
-    paymentStatus: "Paid",
-    fee: 1500,
-    complaint: "Routine cardiac checkup, experiencing mild chest tightness during intensive exercise.",
-    notes: "Patient advised to monitor heart rate. Prescribed mild beta-blocker as preventative measure.",
-    prescription: "Metoprolol 25mg - Once daily in the morning (30 days)",
-    updatedAt: "2026-06-04T10:00:00Z"
-  },
-  {
-    id: "apt_2",
-    patientId: "pat_sample",
-    patientName: "Go jo",
-    doctorId: "doc_sterling",
-    doctorName: "Dr. Marcus Sterling",
-    specialty: "Pediatrics",
-    date: "2026-06-10",
-    time: "02:00 PM",
-    status: "Pending",
-    paymentStatus: "Unpaid",
-    fee: 1200,
-    complaint: "Consultation regarding vaccine schedule for toddler.",
-    notes: "",
-    prescription: "",
-    updatedAt: "2026-06-04T14:30:00Z"
-  }
-];
-
-const DEFAULT_TRANSACTIONS = [
-  {
-    id: "txn_1",
-    appointmentId: "apt_1",
-    patientId: "pat_sample",
-    patientName: "Go jo",
-    amount: 1500,
-    paymentMethod: "PayMongo - Card",
-    status: "Successful",
-    referenceId: "pm_link_ref_987654321",
-    timestamp: "2026-06-04T10:05:00Z"
-  }
-];
-
-const DEFAULT_LOGS = [
-  {
-    id: "log_1",
-    timestamp: "2026-06-04T10:00:00Z",
-    userEmail: "janandrewbalagso5@gmail.com",
-    action: "System Initialization",
-    details: "EverCare Medical System initialized successfully."
-  },
-  {
-    id: "log_2",
-    timestamp: "2026-06-04T10:05:00Z",
-    userEmail: "patient@evercare.com",
-    action: "Payment Completed",
-    details: "Consultation fee of ₱1500 paid via PayMongo for appointment apt_1."
-  }
-];
-
-const DEFAULT_SETTINGS = {
-  maintenanceMode: false,
-  twoFactorRequired: false,
-  allowedDomains: "*",
-  backupInterval: "Daily"
-};
-
-// Initialize localStorage DB if empty or reset requested
-const initMockDB = (force = false) => {
-  if (!localStorage.getItem("evercare_doctors") || force) {
-    localStorage.setItem("evercare_doctors", JSON.stringify(DEFAULT_DOCTORS));
-  }
-  if (!localStorage.getItem("evercare_users") || force) {
-    localStorage.setItem("evercare_users", JSON.stringify(DEFAULT_USERS));
-  }
-  if (!localStorage.getItem("evercare_appointments") || force) {
-    localStorage.setItem("evercare_appointments", JSON.stringify(DEFAULT_APPOINTMENTS));
-  }
-  if (!localStorage.getItem("evercare_transactions") || force) {
-    localStorage.setItem("evercare_transactions", JSON.stringify(DEFAULT_TRANSACTIONS));
-  }
-  if (!localStorage.getItem("evercare_logs") || force) {
-    localStorage.setItem("evercare_logs", JSON.stringify(DEFAULT_LOGS));
-  }
-  if (!localStorage.getItem("evercare_settings") || force) {
-    localStorage.setItem("evercare_settings", JSON.stringify(DEFAULT_SETTINGS));
-  }
-};
-
-initMockDB();
-
-// Migration: only reset if users have no password field (truly corrupt data)
-try {
-  const localUsers = JSON.parse(localStorage.getItem("evercare_users") || "[]");
-  // Only wipe if data is clearly corrupt (missing passwords)
-  const needsMigration = localUsers.length === 0 || localUsers.some(u => !u.password);
-  if (needsMigration) {
-    localStorage.setItem("evercare_users", JSON.stringify(DEFAULT_USERS));
-  } else {
-    // Migration: add missing doctor accounts (sterling, jenkins, cho, gallagher)
-    const missingDoctorUids = ["doc_sterling", "doc_jenkins", "doc_cho", "doc_gallagher"];
-    const hasMissingDoctors = missingDoctorUids.some(uid => !localUsers.find(u => u.uid === uid));
-    if (hasMissingDoctors) {
-      const existingUids = new Set(localUsers.map(u => u.uid));
-      const newDoctors = DEFAULT_USERS.filter(u => missingDoctorUids.includes(u.uid) && !existingUids.has(u.uid));
-      localStorage.setItem("evercare_users", JSON.stringify([...localUsers, ...newDoctors]));
-    }
-  }
-} catch (e) {
-  console.warn("Could not migrate user credentials", e);
-}
-
-// Helper to write audit log
-const writeMockLog = (email, action, details) => {
-  const logs = JSON.parse(localStorage.getItem("evercare_logs") || "[]");
-  logs.unshift({
-    id: "log_" + Date.now(),
-    timestamp: new Date().toISOString(),
-    userEmail: email,
-    action,
-    details
+const apiFetch = async (path, options = {}) => {
+  const res = await fetch(`${API_URL}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
   });
-  localStorage.setItem("evercare_logs", JSON.stringify(logs.slice(0, 100))); // Keep last 100 logs
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || "API request failed");
+  }
+  return res.json();
 };
-
-// ==========================================
-// UNIFIED DATABASE SERVICE
-// ==========================================
 
 export const dbService = {
-  isMockMode: () => isMock,
-
-  // Reset Mock Database (Disaster Recovery Simulation)
-  resetMockDatabase: () => {
-    if (!isMock) return false;
-    initMockDB(true);
-    writeMockLog("system@evercare.com", "Database Reset", "System database restored from clean cloud backup.");
-    return true;
-  },
-
-  // Export Backups (JSON string representing entire DB state)
-  getDatabaseBackup: () => {
-    if (isMock) {
-      return JSON.stringify({
-        doctors: JSON.parse(localStorage.getItem("evercare_doctors")),
-        users: JSON.parse(localStorage.getItem("evercare_users")),
-        appointments: JSON.parse(localStorage.getItem("evercare_appointments")),
-        transactions: JSON.parse(localStorage.getItem("evercare_transactions")),
-        logs: JSON.parse(localStorage.getItem("evercare_logs")),
-        settings: JSON.parse(localStorage.getItem("evercare_settings")),
-        timestamp: new Date().toISOString()
-      }, null, 2);
-    }
-    return JSON.stringify({ message: "Firebase backups should be accessed via Firebase Console." });
+  isMockMode: async () => {
+    const data = await apiFetch("/");
+    return data.mode === "mock";
   },
 
   // ------------------------------------------
   // USER ACTIONS
   // ------------------------------------------
-  getUser: async (email) => {
-    if (isMock) {
-      const users = JSON.parse(localStorage.getItem("evercare_users") || "[]");
-      return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
-    }
+  getUser: (email) =>
+    apiFetch(`/api/users?email=${encodeURIComponent(email)}`),
 
-    const q = query(collection(firestore, "users"), where("email", "==", email.toLowerCase()));
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) return null;
-    return { uid: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
-  },
+  createUser: (userData) =>
+    apiFetch("/api/users", {
+      method: "POST",
+      body: JSON.stringify(userData),
+    }),
 
-  createUser: async (userData) => {
-    if (isMock) {
-      const users = JSON.parse(localStorage.getItem("evercare_users") || "[]");
-      if (users.some(u => u.email.toLowerCase() === userData.email.toLowerCase())) {
-        throw new Error("Email already exists");
-      }
-      const newUser = {
-        uid: userData.uid || "usr_" + Date.now(),
-        twoFactorEnabled: false,
-        twoFactorSecret: Math.floor(100000 + Math.random() * 900000).toString(), // Auto-generate 2FA secret
-        ...userData
-      };
-      users.push(newUser);
-      localStorage.setItem("evercare_users", JSON.stringify(users));
-      writeMockLog(userData.email, "User Registration", `New ${userData.role} registered: ${userData.name}`);
-      return newUser;
-    }
+  updateUser: (uid, data) =>
+    apiFetch(`/api/users/${uid}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
 
-    const userDocRef = doc(firestore, "users", userData.uid);
-    const data = {
-      twoFactorEnabled: false,
-      twoFactorSecret: Math.floor(100000 + Math.random() * 900000).toString(),
-      createdAt: Timestamp.now(),
-      ...userData
-    };
-    await setDoc(userDocRef, data);
-    return data;
-  },
-
-  updateUser: async (uid, data) => {
-    if (isMock) {
-      const users = JSON.parse(localStorage.getItem("evercare_users") || "[]");
-      const index = users.findIndex(u => u.uid === uid);
-      if (index === -1) throw new Error("User not found");
-      users[index] = { ...users[index], ...data };
-      localStorage.setItem("evercare_users", JSON.stringify(users));
-      writeMockLog(users[index].email, "Profile Updated", "User information updated.");
-      return users[index];
-    }
-
-    const userDocRef = doc(firestore, "users", uid);
-    await updateDoc(userDocRef, data);
-    return data;
-  },
-
-  getPatients: async () => {
-    if (isMock) {
-      const users = JSON.parse(localStorage.getItem("evercare_users") || "[]");
-      return users.filter(u => u.role === "patient");
-    }
-    const q = query(collection(firestore, "users"), where("role", "==", "patient"));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
-  },
+  getPatients: () => apiFetch("/api/users/patients"),
 
   // ------------------------------------------
   // DOCTOR ACTIONS
   // ------------------------------------------
-  getDoctors: async () => {
-    if (isMock) {
-      const stored = localStorage.getItem("evercare_doctors");
-      const doctors = JSON.parse(stored || JSON.stringify(DEFAULT_DOCTORS));
-      // Ensure each doctor has a uid field matching their id, so doctorId filter works in DoctorPortal
-      return doctors.map(d => ({ ...d, uid: d.uid || d.id }));
-    }
-    const querySnapshot = await getDocs(collection(firestore, "doctors"));
-    return querySnapshot.docs.map(doc => ({ id: doc.id, uid: doc.id, ...doc.data() }));
-  },
+  getDoctors: () => apiFetch("/api/doctors"),
 
-  updateDoctorAvailability: async (doctorId, availability) => {
-    if (isMock) {
-      const doctors = JSON.parse(localStorage.getItem("evercare_doctors") || "[]");
-      const index = doctors.findIndex(d => d.id === doctorId);
-      if (index === -1) throw new Error("Doctor not found");
-      doctors[index].availability = availability;
-      localStorage.setItem("evercare_doctors", JSON.stringify(doctors));
-      writeMockLog(doctorId, "Schedule Update", "Doctor updated operational availability.");
-      return doctors[index];
-    }
-
-    const docRef = doc(firestore, "doctors", doctorId);
-    await updateDoc(docRef, { availability });
-    return availability;
-  },
+  updateDoctorAvailability: (doctorId, availability) =>
+    apiFetch(`/api/doctors/${doctorId}/availability`, {
+      method: "PATCH",
+      body: JSON.stringify({ availability }),
+    }),
 
   // ------------------------------------------
   // APPOINTMENT ACTIONS
   // ------------------------------------------
-  getAppointments: async () => {
-    if (isMock) {
-      const stored = localStorage.getItem("evercare_appointments");
-      return JSON.parse(stored || JSON.stringify(DEFAULT_APPOINTMENTS));
-    }
-    const q = query(collection(firestore, "appointments"), orderBy("date", "asc"));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  },
+  getAppointments: () => apiFetch("/api/appointments"),
 
-  bookAppointment: async (appointmentData) => {
-    const newApt = {
-      id: "apt_" + Date.now(),
-      status: "Pending",
-      paymentStatus: "Unpaid",
-      prescription: "",
-      notes: "",
-      updatedAt: new Date().toISOString(),
-      ...appointmentData
-    };
+  bookAppointment: (appointmentData) =>
+    apiFetch("/api/appointments", {
+      method: "POST",
+      body: JSON.stringify(appointmentData),
+    }),
 
-    if (isMock) {
-      const appointments = JSON.parse(localStorage.getItem("evercare_appointments") || "[]");
-      appointments.unshift(newApt);
-      localStorage.setItem("evercare_appointments", JSON.stringify(appointments));
-      writeMockLog(appointmentData.patientName, "Appointment Booked", `Booked with ${appointmentData.doctorName} for ${appointmentData.date}`);
-      return newApt;
-    }
-
-    await setDoc(doc(firestore, "appointments", newApt.id), {
-      ...newApt,
-      createdAt: Timestamp.now()
-    });
-    return newApt;
-  },
+  updateAppointmentStatus: (appointmentId, updates) =>
+    apiFetch(`/api/appointments/${appointmentId}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    }),
 
   // ------------------------------------------
   // SLOT CONFLICT CHECK
   // ------------------------------------------
   checkSlotAvailability: async (doctorId, date, time, excludeAptId = null) => {
-    const allApts = isMock
-      ? JSON.parse(localStorage.getItem("evercare_appointments") || "[]")
-      : [];
+    const allApts = await apiFetch("/api/appointments");
     const conflict = allApts.find(
       (a) =>
         a.doctorId === doctorId &&
@@ -536,130 +85,54 @@ export const dbService = {
     return !conflict; // true = slot is available
   },
 
-  updateAppointmentStatus: async (appointmentId, updates) => {
-    if (isMock) {
-      const appointments = JSON.parse(localStorage.getItem("evercare_appointments") || "[]");
-      const index = appointments.findIndex(a => a.id === appointmentId);
-      if (index === -1) throw new Error("Appointment not found");
-      appointments[index] = {
-        ...appointments[index],
-        ...updates,
-        updatedAt: new Date().toISOString()
-      };
-      localStorage.setItem("evercare_appointments", JSON.stringify(appointments));
-      writeMockLog("system@evercare.com", "Appointment Modified", `Apt ${appointmentId} updated to: ${updates.status || appointments[index].status}`);
-      return appointments[index];
-    }
-
-    const docRef = doc(firestore, "appointments", appointmentId);
-    await updateDoc(docRef, {
-      ...updates,
-      updatedAt: Timestamp.now()
-    });
-    return updates;
-  },
-
   // ------------------------------------------
   // TRANSACTION ACTIONS
   // ------------------------------------------
-  getTransactions: async () => {
-    if (isMock) {
-      return JSON.parse(localStorage.getItem("evercare_transactions") || "[]");
-    }
-    const q = query(collection(firestore, "transactions"), orderBy("timestamp", "desc"));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  },
+  getTransactions: () => apiFetch("/api/transactions"),
 
-  addTransaction: async (txnData) => {
-    const newTxn = {
-      id: txnData.id || "txn_" + Date.now(),
-      timestamp: new Date().toISOString(),
-      ...txnData
-    };
-
-    if (isMock) {
-      const txns = JSON.parse(localStorage.getItem("evercare_transactions") || "[]");
-      txns.unshift(newTxn);
-      localStorage.setItem("evercare_transactions", JSON.stringify(txns));
-      writeMockLog(txnData.patientName, "Payment Recorded", `Paid ₱${txnData.amount} via ${txnData.paymentMethod}`);
-      return newTxn;
-    }
-
-    await setDoc(doc(firestore, "transactions", newTxn.id), {
-      ...newTxn,
-      timestamp: Timestamp.now()
-    });
-    return newTxn;
-  },
+  addTransaction: (txnData) =>
+    apiFetch("/api/transactions", {
+      method: "POST",
+      body: JSON.stringify(txnData),
+    }),
 
   // ------------------------------------------
   // LOGS & SYSTEM ACTIONS
   // ------------------------------------------
-  getSystemLogs: async () => {
-    if (isMock) {
-      return JSON.parse(localStorage.getItem("evercare_logs") || "[]");
-    }
-    const q = query(collection(firestore, "logs"), orderBy("timestamp", "desc"));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  },
+  getSystemLogs: () => apiFetch("/api/system/logs"),
 
-  logAction: async (email, action, details) => {
-    if (isMock) {
-      writeMockLog(email, action, details);
-      return;
-    }
+  logAction: (email, action, details) =>
+    apiFetch("/api/system/logs", {
+      method: "POST",
+      body: JSON.stringify({ email, action, details }),
+    }),
 
-    try {
-      await addDoc(collection(firestore, "logs"), {
-        timestamp: Timestamp.now(),
-        userEmail: email,
-        action,
-        details
-      });
-    } catch (e) {
-      console.warn("Could not log action to firebase", e);
-    }
-  },
+  getSystemSettings: () => apiFetch("/api/system/settings"),
 
-  getSystemSettings: async () => {
-    if (isMock) {
-      return JSON.parse(localStorage.getItem("evercare_settings") || "{}");
-    }
-    const docRef = doc(firestore, "settings", "global");
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) return DEFAULT_SETTINGS;
-    return docSnap.data();
-  },
+  updateSystemSettings: (settings) =>
+    apiFetch("/api/system/settings", {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    }),
 
-  updateSystemSettings: async (settings) => {
-    if (isMock) {
-      localStorage.setItem("evercare_settings", JSON.stringify(settings));
-      writeMockLog("janandrewbalagso5@gmail.com", "Settings Changed", "System-wide settings updated.");
-      return settings;
-    }
-    const docRef = doc(firestore, "settings", "global");
-    await setDoc(docRef, settings);
-    return settings;
+  resetMockDatabase: () =>
+    apiFetch("/api/system/reset", { method: "POST" }),
+
+  getDatabaseBackup: async () => {
+    const data = await apiFetch("/api/system/backup");
+    return JSON.stringify(data, null, 2);
   },
 
   // ------------------------------------------
-  // FILE UPLOAD (SIMULATED / FIREBASE STORAGE)
+  // FILE UPLOAD (still simulated — Firebase Storage
+  // would need separate setup)
   // ------------------------------------------
   uploadFile: async (filePath, fileObject) => {
-    if (isMock) {
-      // Return a simulated URL
-      console.log(`Mock Upload: Uploading ${fileObject.name} to ${filePath}`);
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(`https://evercare-medical.web.app/mock-storage/${filePath}/${fileObject.name}`);
-        }, 1000);
-      });
-    }
-
-    const storageRef = ref(storage, filePath);
-    await uploadBytes(storageRef, fileObject);
-    return await getDownloadURL(storageRef);
-  }
+    console.log(`Upload: ${fileObject.name} to ${filePath}`);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(`https://evercare-medical.web.app/mock-storage/${filePath}/${fileObject.name}`);
+      }, 1000);
+    });
+  },
 };
