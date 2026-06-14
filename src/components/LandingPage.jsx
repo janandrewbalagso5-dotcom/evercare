@@ -1,1453 +1,1447 @@
 import React, { useState, useEffect } from "react";
 import {
-  Phone,
-  Mail,
-  MapPin,
-  ChevronLeft,
-  ChevronRight,
-  Heart,
-  Activity,
-  ArrowRight,
-  Check,
-  Star,
-  Building2,
-  UserCheck,
-  User,
-  Navigation,
-  LogIn,
-  Lock,
-  CalendarDays,
-  Clock,
-  Stethoscope,
-  Contact,
-  Hash,
-  Menu,
-  X,
+    Phone,
+    Mail,
+    MapPin,
+    ChevronLeft,
+    ChevronRight,
+    Heart,
+    Activity,
+    ArrowRight,
+    Check,
+    Star,
+    Building2,
+    UserCheck,
+    User,
+    Navigation,
+    LogIn,
+    Lock,
+    CalendarDays,
+    Clock,
+    Stethoscope,
+    Contact,
+    Hash,
+    Menu,
+    X,
 } from "lucide-react";
 import { dbService } from "../services/firebase";
 import Captcha from "./Captcha";
 
 const slides = [
-  {
-    badgeText: "Best Diagnostic Centre",
-    title: "Care And Cure",
-    subtitle:
-      "Improved diagnostic performance and heightened satisfaction of patients and physicians delight.",
-    image:
-      "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600",
-    themeColor: "#10b981",
-    buttonText: "CONTACT NOW",
-  },
-  {
-    badgeText: "Emergency Services 24/7",
-    title: "Compassionate Care",
-    subtitle:
-      "Our urgent care services are operational round the clock with expert staff ready to support you.",
-    image:
-      "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=600",
-    themeColor: "#ef4444",
-    buttonText: "BOOK NOW",
-  },
-  {
-    badgeText: "Expert Board-Certified Specialists",
-    title: "Professional Staff",
-    subtitle:
-      "Schedule private virtual telehealth sessions or clinic visits with leading practitioners.",
-    image:
-      "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=600",
-    themeColor: "#0284c7",
-    buttonText: "MEET SPECIALISTS",
-  },
+    {
+        badgeText: "Best Diagnostic Centre",
+        title: "Care And Cure",
+        subtitle:
+            "Improved diagnostic performance and heightened satisfaction of patients and physicians delight.",
+        image:
+            "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600",
+        themeColor: "#10b981",
+        buttonText: "CONTACT NOW",
+    },
+    {
+        badgeText: "Emergency Services 24/7",
+        title: "Compassionate Care",
+        subtitle:
+            "Our urgent care services are operational round the clock with expert staff ready to support you.",
+        image:
+            "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=600",
+        themeColor: "#ef4444",
+        buttonText: "BOOK NOW",
+    },
+    {
+        badgeText: "Expert Board-Certified Specialists",
+        title: "Professional Staff",
+        subtitle:
+            "Schedule private virtual telehealth sessions or clinic visits with leading practitioners.",
+        image:
+            "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=600",
+        themeColor: "#0284c7",
+        buttonText: "MEET SPECIALISTS",
+    },
 ];
 
 export default function LandingPage({
-  authTab,
-  setAuthTab,
-  email,
-  setEmail,
-  password,
-  setPassword,
-  name,
-  setName,
-  registerRole,
-  setRegisterRole,
-  captchaVerified,
-  setCaptchaVerified,
-  captchaResetKey,
-  handleLogin,
-  handleRegister,
-  showNotification,
-  landingTab,
-  setLandingTab,
-  setCurrentUser,
-  persistSession,
+    authTab,
+    setAuthTab,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    name,
+    setName,
+    registerRole,
+    setRegisterRole,
+    captchaVerified,
+    setCaptchaVerified,
+    captchaResetKey,
+    handleLogin,
+    handleRegister,
+    showNotification,
+    landingTab,
+    setLandingTab,
+    setCurrentUser,
+    persistSession,
 }) {
-  const [doctors, setDoctors] = useState([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [aptSubmitted, setAptSubmitted] = useState(false);
-  const [aptLoading, setAptLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [loginRole, setLoginRole] = useState("admin");
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [localCaptchaReset, setLocalCaptchaReset] = useState(0);
-  const effectiveCaptchaKey = captchaResetKey * 1000 + localCaptchaReset;
-  const [contactForm, setContactForm] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
-  const [guestAptForm, setGuestAptForm] = useState({
-    patientName: "",
-    address: "",
-    city: "",
-    contactNumber: "",
-    loginId: "",
-    password: "",
-    gender: "",
-    dob: "",
-    date: "",
-    time: "",
-    department: "",
-    doctorId: "",
-    complaint: "",
-    // Medical history fields
-    bloodType: "",
-    allergies: "",
-    currentMedications: "",
-    pastConditions: "",
-    previousSurgeries: "",
-    medicalFiles: [], // [{name, type, dataUrl}]
-  });
+    const [doctors, setDoctors] = useState([]);
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [aptSubmitted, setAptSubmitted] = useState(false);
+    const [aptLoading, setAptLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
+    const [loginRole, setLoginRole] = useState("admin");
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
+    const [localCaptchaReset, setLocalCaptchaReset] = useState(0);
+    const effectiveCaptchaKey = captchaResetKey * 1000 + localCaptchaReset;
+    const [contactForm, setContactForm] = useState({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+    });
+    const [guestAptForm, setGuestAptForm] = useState({
+        patientName: "",
+        address: "",
+        city: "",
+        contactNumber: "",
+        loginId: "",
+        password: "",
+        gender: "",
+        dob: "",
+        date: "",
+        time: "",
+        department: "",
+        doctorId: "",
+        complaint: "",
+        // Medical history fields
+        bloodType: "",
+        allergies: "",
+        currentMedications: "",
+        pastConditions: "",
+        previousSurgeries: "",
+        medicalFiles: [], // [{name, type, dataUrl}]
+    });
 
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const docList = await dbService.getDoctors();
-        setDoctors(docList);
-        if (docList.length > 0) {
-          setGuestAptForm((prev) => ({ ...prev, doctorId: docList[0].id }));
-        }
-      } catch (err) {
-        console.error("Failed to load doctors", err);
-      }
+    useEffect(() => {
+        const fetchDoctors = async () => {
+            try {
+                const docList = await dbService.getDoctors();
+                setDoctors(docList);
+                if (docList.length > 0) {
+                    setGuestAptForm((prev) => ({ ...prev, doctorId: docList[0].id }));
+                }
+            } catch (err) {
+                console.error("Failed to load doctors", err);
+            }
+        };
+        fetchDoctors();
+    }, []);
+
+    useEffect(() => {
+        if (landingTab !== "home") return;
+        const interval = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 6000);
+        return () => clearInterval(interval);
+    }, [landingTab]);
+
+    const handleNextSlide = () =>
+        setCurrentSlide((currentSlide + 1) % slides.length);
+    const handlePrevSlide = () =>
+        setCurrentSlide((currentSlide - 1 + slides.length) % slides.length);
+
+    const handleContactSubmit = (e) => {
+        e.preventDefault();
+        showNotification(
+            "Thank you for reaching out! Our staff will contact you shortly.",
+            "success",
+        );
+        setContactForm({ name: "", email: "", subject: "", message: "" });
     };
-    fetchDoctors();
-  }, []);
 
-  useEffect(() => {
-    if (landingTab !== "home") return;
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [landingTab]);
+    /* ── GUEST APPOINTMENT: create account + book appointment ── */
+    const handleGuestAptSubmit = async (e) => {
+        e.preventDefault();
+        setAptLoading(true);
 
-  const handleNextSlide = () =>
-    setCurrentSlide((currentSlide + 1) % slides.length);
-  const handlePrevSlide = () =>
-    setCurrentSlide((currentSlide - 1 + slides.length) % slides.length);
+        try {
+            // 1. Check if account already exists
+            const existingUser = await dbService.getUser(guestAptForm.loginId);
 
-  const handleContactSubmit = (e) => {
-    e.preventDefault();
-    showNotification(
-      "Thank you for reaching out! Our staff will contact you shortly.",
-      "success",
-    );
-    setContactForm({ name: "", email: "", subject: "", message: "" });
-  };
+            let patientUser;
 
-  /* ── GUEST APPOINTMENT: create account + book appointment ── */
-  const handleGuestAptSubmit = async (e) => {
-    e.preventDefault();
-    setAptLoading(true);
+            if (existingUser) {
+                // Account exists — verify password
+                if (existingUser.password !== guestAptForm.password) {
+                    showNotification(
+                        "An account with this email already exists but the password is incorrect.",
+                        "error",
+                    );
+                    setAptLoading(false);
+                    return;
+                }
+                patientUser = existingUser;
+            } else {
+                // 2. Create new patient account with all form data
+                const uid = "pat_" + Date.now();
+                patientUser = await dbService.createUser({
+                    uid,
+                    email: guestAptForm.loginId,
+                    password: guestAptForm.password,
+                    name: guestAptForm.patientName,
+                    role: "patient",
+                    phone: guestAptForm.contactNumber,
+                    gender: guestAptForm.gender,
+                    dob: guestAptForm.dob,
+                    address: `${guestAptForm.address}, ${guestAptForm.city}`,
+                    bloodType: "O+",
+                });
+            }
 
-    try {
-      // 1. Check if account already exists
-      const existingUser = await dbService.getUser(guestAptForm.loginId);
+            // 3. Find selected doctor details
+            const selectedDoc = doctors.find((d) => d.id === guestAptForm.doctorId);
+            if (!selectedDoc) {
+                showNotification("Selected doctor not found.", "error");
+                setAptLoading(false);
+                return;
+            }
 
-      let patientUser;
+            // 4. Book the appointment linked to this patient
+            await dbService.bookAppointment({
+                patientId: patientUser.uid,
+                patientName: patientUser.name,
+                doctorId: selectedDoc.id,
+                doctorName: selectedDoc.name,
+                specialty: guestAptForm.department || selectedDoc.specialty,
+                date: guestAptForm.date,
+                time: guestAptForm.time,
+                fee: selectedDoc.fee,
+                complaint: guestAptForm.complaint,
+                medicalHistory: {
+                    bloodType: guestAptForm.bloodType,
+                    allergies: guestAptForm.allergies,
+                    currentMedications: guestAptForm.currentMedications,
+                    pastConditions: guestAptForm.pastConditions,
+                    previousSurgeries: guestAptForm.previousSurgeries,
+                    files: guestAptForm.medicalFiles,
+                },
+            });
 
-      if (existingUser) {
-        // Account exists — verify password
-        if (existingUser.password !== guestAptForm.password) {
-          showNotification(
-            "An account with this email already exists but the password is incorrect.",
-            "error",
-          );
-          setAptLoading(false);
-          return;
+            // 5. Log the action
+            await dbService.logAction(
+                guestAptForm.loginId,
+                "Guest Appointment Submitted",
+                `Appointment booked with ${selectedDoc.name} for ${guestAptForm.date} at ${guestAptForm.time}`,
+            );
+
+            setAptSubmitted(true);
+            showNotification("Appointment booked successfully!", "success");
+        } catch (err) {
+            showNotification("Failed to submit appointment: " + err.message, "error");
+        } finally {
+            setAptLoading(false);
         }
-        patientUser = existingUser;
-      } else {
-        // 2. Create new patient account with all form data
-        const uid = "pat_" + Date.now();
-        patientUser = await dbService.createUser({
-          uid,
-          email: guestAptForm.loginId,
-          password: guestAptForm.password,
-          name: guestAptForm.patientName,
-          role: "patient",
-          phone: guestAptForm.contactNumber,
-          gender: guestAptForm.gender,
-          dob: guestAptForm.dob,
-          address: `${guestAptForm.address}, ${guestAptForm.city}`,
-          bloodType: "O+",
-        });
-      }
+    };
 
-      // 3. Find selected doctor details
-      const selectedDoc = doctors.find((d) => d.id === guestAptForm.doctorId);
-      if (!selectedDoc) {
-        showNotification("Selected doctor not found.", "error");
-        setAptLoading(false);
-        return;
-      }
+    /* After success, pre-fill login form and redirect to login tab */
+    const handleGoToLogin = () => {
+        setAptSubmitted(false);
+        setEmail(guestAptForm.loginId);
+        setPassword(guestAptForm.password);
+        setRegisterRole && setRegisterRole("patient");
+        setLandingTab("login");
+        setAuthTab("login");
+    };
 
-      // 4. Book the appointment linked to this patient
-      await dbService.bookAppointment({
-        patientId: patientUser.uid,
-        patientName: patientUser.name,
-        doctorId: selectedDoc.id,
-        doctorName: selectedDoc.name,
-        specialty: guestAptForm.department || selectedDoc.specialty,
-        date: guestAptForm.date,
-        time: guestAptForm.time,
-        fee: selectedDoc.fee,
-        complaint: guestAptForm.complaint,
-        medicalHistory: {
-          bloodType: guestAptForm.bloodType,
-          allergies: guestAptForm.allergies,
-          currentMedications: guestAptForm.currentMedications,
-          pastConditions: guestAptForm.pastConditions,
-          previousSurgeries: guestAptForm.previousSurgeries,
-          files: guestAptForm.medicalFiles,
-        },
-      });
+    return (
+        <div className="landing-page-container">
+            {/* 1. TOP HEADER */}
+            <header className="landing-top-header flex justify-between items-center flex-wrap gap-4">
+                <div
+                    className="landing-logo-container cursor-pointer"
+                    onClick={() => setLandingTab("home")}
+                >
+                    <div className="landing-logo-circle">
+                        <Building2 size={24} className="text-white" />
+                    </div>
+                    <div className="landing-logo-text">
+                        <span className="main">HOSPITAL</span>
+                        <span className="sub">APPOINTMENT SYSTEM</span>
+                    </div>
+                </div>
 
-      // 5. Log the action
-      await dbService.logAction(
-        guestAptForm.loginId,
-        "Guest Appointment Submitted",
-        `Appointment booked with ${selectedDoc.name} for ${guestAptForm.date} at ${guestAptForm.time}`,
-      );
+                <div className="landing-contacts-group flex-wrap">
+                    <div className="landing-contact-item">
+                        <div className="landing-contact-icon">
+                            <Phone size={16} />
+                        </div>
+                        <div className="landing-contact-text">
+                            <div className="line1">095 6631 4216</div>
+                        </div>
+                    </div>
+                    <div className="landing-contact-item">
+                        <div className="landing-contact-icon">
+                            <Mail size={16} />
+                        </div>
+                        <div className="landing-contact-text">
+                            <div className="line1">druehtml@gmail.com</div>
+                            <div className="line2">druehtml@gmail.com</div>
+                        </div>
+                    </div>
+                    <div className="landing-contact-item">
+                        <div className="landing-contact-icon">
+                            <MapPin size={16} />
+                        </div>
+                        <div className="landing-contact-text">
+                            <div className="line1">000 000 000</div>
+                            <div className="line2">San Manuel, Isabela</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-      // 6. Auto-login: directly set the current user so they land in their portal
-      if (setCurrentUser && persistSession) {
-        setCurrentUser(patientUser);
-        persistSession(patientUser);
-        showNotification(`Welcome, ${patientUser.name}! Your appointment has been booked.`, "success");
-      } else {
-        setAptSubmitted(true);
-      }
-    } catch (err) {
-      showNotification("Failed to submit appointment: " + err.message, "error");
-    } finally {
-      setAptLoading(false);
-    }
-  };
+            {/* 2. NAVIGATION BAR */}
+            <nav className="landing-nav-bar">
+                {/* Hamburger: visible only on mobile via CSS */}
+                <button
+                    className="landing-nav-hamburger"
+                    onClick={() => setMobileNavOpen(!mobileNavOpen)}
+                    aria-label="Toggle navigation menu"
+                    aria-expanded={mobileNavOpen}
+                >
+                    {mobileNavOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
 
-  /* After success, pre-fill login form and redirect to login tab */
-  const handleGoToLogin = () => {
-    setAptSubmitted(false);
-    setEmail(guestAptForm.loginId);
-    setPassword(guestAptForm.password);
-    setRegisterRole && setRegisterRole("patient");
-    setLandingTab("login");
-    setAuthTab("login");
-  };
-
-  return (
-    <div className="landing-page-container">
-      {/* 1. TOP HEADER */}
-      <header className="landing-top-header flex justify-between items-center flex-wrap gap-4">
-        <div
-          className="landing-logo-container cursor-pointer"
-          onClick={() => setLandingTab("home")}
-        >
-          <div className="landing-logo-circle">
-            <Building2 size={24} className="text-white" />
-          </div>
-          <div className="landing-logo-text">
-            <span className="main">HOSPITAL</span>
-            <span className="sub">APPOINTMENT SYSTEM</span>
-          </div>
-        </div>
-
-        <div className="landing-contacts-group flex-wrap">
-          <div className="landing-contact-item">
-            <div className="landing-contact-icon">
-              <Phone size={16} />
-            </div>
-            <div className="landing-contact-text">
-              <div className="line1">095 6631 4216</div>
-            </div>
-          </div>
-          <div className="landing-contact-item">
-            <div className="landing-contact-icon">
-              <Mail size={16} />
-            </div>
-            <div className="landing-contact-text">
-              <div className="line1">druehtml@gmail.com</div>
-              <div className="line2">druehtml@gmail.com</div>
-            </div>
-          </div>
-          <div className="landing-contact-item">
-            <div className="landing-contact-icon">
-              <MapPin size={16} />
-            </div>
-            <div className="landing-contact-text">
-              <div className="line1">000 000 000</div>
-              <div className="line2">San Manuel, Isabela</div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* 2. NAVIGATION BAR */}
-      <nav className="landing-nav-bar">
-        {/* Hamburger: visible only on mobile via CSS */}
-        <button
-          className="landing-nav-hamburger"
-          onClick={() => setMobileNavOpen(!mobileNavOpen)}
-          aria-label="Toggle navigation menu"
-          aria-expanded={mobileNavOpen}
-        >
-          {mobileNavOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-
-        <ul className={`landing-nav-links ${mobileNavOpen ? "mobile-open" : ""}`}>
-          <li
-            className={`landing-nav-link ${landingTab === "home" ? "active" : ""}`}
-            onClick={() => { setLandingTab("home"); setMobileNavOpen(false); }}
-          >
-            Home
-          </li>
-          <li
-            className={`landing-nav-link ${landingTab === "about" ? "active" : ""}`}
-            onClick={() => { setLandingTab("about"); setMobileNavOpen(false); }}
-          >
-            About
-          </li>
-          <li
-            className={`landing-nav-link ${landingTab === "appointment" ? "active" : ""}`}
-            onClick={() => { setLandingTab("appointment"); setMobileNavOpen(false); }}
-          >
-            Appointment
-          </li>
-          <li
-            className={`landing-nav-link ${landingTab === "contact" ? "active" : ""}`}
-            onClick={() => { setLandingTab("contact"); setMobileNavOpen(false); }}
-          >
-            Contact
-          </li>
-          <li
-            className={`landing-nav-link ${landingTab === "login" ? "active" : ""}`}
-            onClick={() => {
-              setLandingTab("login");
-              setAuthTab("login");
-              setMobileNavOpen(false);
-            }}
-          >
-            Log In
-          </li>
-        </ul>
-      </nav>
-
-      {/* 3. MAIN PUBLIC SECTIONS */}
-      <main className="flex-grow">
-        {/* ================= HOME ================= */}
-        {landingTab === "home" && (
-          <div className="animate-fade-in">
-            <section className="landing-hero">
-              <div className="landing-hero-slider">
-                {slides.map((slide, idx) => (
-                  <div
-                    key={idx}
-                    className={`landing-hero-slide ${idx === currentSlide ? "active" : ""}`}
-                  >
-                    <div className="landing-hero-content">
-                      <div className="landing-hero-badge-container">
-                        <div
-                          className="landing-hero-badge-bar"
-                          style={{ backgroundColor: slide.themeColor }}
-                        />
-                        <span className="landing-hero-badge">
-                          {slide.badgeText}
-                        </span>
-                      </div>
-                      <h2 className="landing-hero-title">{slide.title}</h2>
-                      <p className="landing-hero-subtitle">{slide.subtitle}</p>
-                      <button
+                <ul className={`landing-nav-links ${mobileNavOpen ? "mobile-open" : ""}`}>
+                    <li
+                        className={`landing-nav-link ${landingTab === "home" ? "active" : ""}`}
+                        onClick={() => { setLandingTab("home"); setMobileNavOpen(false); }}
+                    >
+                        Home
+                    </li>
+                    <li
+                        className={`landing-nav-link ${landingTab === "about" ? "active" : ""}`}
+                        onClick={() => { setLandingTab("about"); setMobileNavOpen(false); }}
+                    >
+                        About
+                    </li>
+                    <li
+                        className={`landing-nav-link ${landingTab === "appointment" ? "active" : ""}`}
+                        onClick={() => { setLandingTab("appointment"); setMobileNavOpen(false); }}
+                    >
+                        Appointment
+                    </li>
+                    <li
+                        className={`landing-nav-link ${landingTab === "contact" ? "active" : ""}`}
+                        onClick={() => { setLandingTab("contact"); setMobileNavOpen(false); }}
+                    >
+                        Contact
+                    </li>
+                    <li
+                        className={`landing-nav-link ${landingTab === "login" ? "active" : ""}`}
                         onClick={() => {
-                          if (idx === 0) setLandingTab("contact");
-                          else if (idx === 1) setLandingTab("appointment");
-                          else setLandingTab("about");
+                            setLandingTab("login");
+                            setAuthTab("login");
+                            setMobileNavOpen(false);
                         }}
-                        className="landing-hero-btn"
-                        style={{ backgroundColor: slide.themeColor }}
-                      >
-                        {slide.buttonText} <ArrowRight size={14} />
-                      </button>
-                    </div>
-                    <div
-                      className="landing-hero-image-overlay"
-                      style={{ backgroundImage: `url(${slide.image})` }}
-                    />
-                  </div>
-                ))}
-                <button
-                  className="landing-hero-arrow prev"
-                  onClick={handlePrevSlide}
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <button
-                  className="landing-hero-arrow next"
-                  onClick={handleNextSlide}
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            </section>
-
-            <section className="landing-section">
-              <h3 className="landing-section-title">
-                Our Specialized Departments
-              </h3>
-              <p className="landing-section-subtitle">
-                Providing standard healthcare facilities managed by certified
-                medical specialists.
-              </p>
-              <div className="landing-services-grid">
-                <div className="landing-service-card">
-                  <div className="landing-service-icon-wrapper">
-                    <Heart size={24} />
-                  </div>
-                  <h4 className="landing-service-title">Cardiology Care</h4>
-                  <p className="landing-service-desc">
-                    Comprehensive heart care including preventative checks,
-                    vascular evaluations, and personalized cardiac therapy
-                    plans.
-                  </p>
-                </div>
-                <div className="landing-service-card">
-                  <div className="landing-service-icon-wrapper">
-                    <UserCheck size={24} />
-                  </div>
-                  <h4 className="landing-service-title">Pediatric Treatment</h4>
-                  <p className="landing-service-desc">
-                    Compassionate medical support for children and adolescents,
-                    focusing on development, growth monitoring, and
-                    immunizations.
-                  </p>
-                </div>
-                <div className="landing-service-card">
-                  <div className="landing-service-icon-wrapper">
-                    <Activity size={24} />
-                  </div>
-                  <h4 className="landing-service-title">General Medicine</h4>
-                  <p className="landing-service-desc">
-                    Broad scope health diagnostic checks, chronic disease
-                    treatment management, and regular wellness counseling.
-                  </p>
-                </div>
-              </div>
-            </section>
-          </div>
-        )}
-
-        {/* ================= ABOUT ================= */}
-        {landingTab === "about" && (
-          <div className="landing-section animate-fade-in">
-            <h3 className="landing-section-title">About Our Hospital</h3>
-            <p className="landing-section-subtitle">
-              Learn more about our team, medical facilities, and commitment to
-              healthcare.
-            </p>
-
-            <div className="landing-about-container mb-8">
-              <div className="landing-about-content">
-                <span className="landing-about-tag">Empowering Health</span>
-                <h4 className="landing-about-heading">
-                  Providing World Class Diagnostics and Treatment Planning
-                </h4>
-                <p className="landing-about-text">
-                  At EverCare, we prioritize patient outcomes. With modern labs
-                  and telemetry equipment, our doctors deliver swift and precise
-                  health diagnostics.
-                </p>
-                <div className="landing-about-features">
-                  {[
-                    "Online Appointment Booking",
-                    "Board-Certified Specialists",
-                    "Secure Digital Health Records",
-                    "24/7 Support Desk Channels",
-                  ].map((f) => (
-                    <div key={f} className="landing-about-feature-item">
-                      <Check size={16} className="landing-about-feature-icon" />{" "}
-                      {f}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <img
-                  src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=600"
-                  alt="Hospital Room"
-                  className="landing-about-img"
-                />
-              </div>
-            </div>
-
-            <div className="pt-6">
-              <h3 className="landing-section-title">Our Medical Specialists</h3>
-              <p className="landing-section-subtitle">
-                Consult with our certified healthcare specialists across
-                clinical practices.
-              </p>
-              <div className="landing-doctors-grid">
-                {doctors.map((doc) => (
-                  <div key={doc.id} className="landing-doctor-card">
-                    <img
-                      src={doc.avatar}
-                      alt={doc.name}
-                      className="landing-doctor-img"
-                    />
-                    <div className="landing-doctor-info">
-                      <span className="landing-doctor-spec">
-                        {doc.specialty}
-                      </span>
-                      <h4 className="landing-doctor-name">{doc.name}</h4>
-                      <p className="landing-doctor-bio">{doc.bio}</p>
-                      <div className="landing-doctor-meta">
-                        <span className="landing-doctor-fee">
-                          ₱{doc.fee} / consult
-                        </span>
-                        <div className="landing-doctor-rating">
-                          <Star
-                            size={14}
-                            className="fill-yellow-500 text-yellow-500"
-                          />{" "}
-                          {doc.rating}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ================= APPOINTMENT ================= */}
-        {landingTab === "appointment" && (
-          <div className="landing-section animate-fade-in">
-            {/* SUCCESS SCREEN */}
-            {aptSubmitted ? (
-              <div className="apt-success-screen">
-                <h2 className="apt-success-title">
-                  Appointment taken successfully..
-                </h2>
-                <p className="apt-success-sub">
-                  Your patient account has been created and your appointment is
-                  pending confirmation. Use your Login ID and password to access
-                  your Patient Dashboard.
-                </p>
-                <button
-                  className="apt-success-login-link"
-                  onClick={handleGoToLogin}
-                >
-                  Click here to Login.
-                </button>
-              </div>
-            ) : (
-              <>
-                <h2 className="apt-form-heading">Make an Appointment</h2>
-
-                <form
-                  onSubmit={handleGuestAptSubmit}
-                  className="apt-form-wrapper"
-                >
-                  {/* Row 1: Patient's Name | Address */}
-                  <div className="apt-form-grid">
-                    <div className="apt-field-group">
-                      <span className="apt-field-icon">
-                        <User size={16} />
-                      </span>
-                      <input
-                        type="text"
-                        className="apt-field-input"
-                        placeholder="Patient's Name"
-                        value={guestAptForm.patientName}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            patientName: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="apt-field-group">
-                      <span className="apt-field-icon">
-                        <Navigation size={16} />
-                      </span>
-                      <input
-                        type="text"
-                        className="apt-field-input"
-                        placeholder="Address"
-                        value={guestAptForm.address}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            address: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Row 2: City | Contact Number */}
-                  <div className="apt-form-grid">
-                    <div className="apt-field-group">
-                      <span className="apt-field-icon">
-                        <MapPin size={16} />
-                      </span>
-                      <input
-                        type="text"
-                        className="apt-field-input"
-                        placeholder="City"
-                        value={guestAptForm.city}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            city: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="apt-field-group">
-                      <span className="apt-field-icon">
-                        <Phone size={16} />
-                      </span>
-                      <input
-                        type="tel"
-                        className="apt-field-input"
-                        placeholder="Contact Number"
-                        value={guestAptForm.contactNumber}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            contactNumber: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Row 3: Login ID | Password */}
-                  <div className="apt-form-grid">
-                    <div className="apt-field-group">
-                      <span className="apt-field-icon">
-                        <LogIn size={16} />
-                      </span>
-                      <input
-                        type="email"
-                        className="apt-field-input"
-                        placeholder="Login ID (Email) — used to log in later"
-                        value={guestAptForm.loginId}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            loginId: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="apt-field-group">
-                      <span className="apt-field-icon">
-                        <Lock size={16} />
-                      </span>
-                      <input
-                        type="password"
-                        className="apt-field-input"
-                        placeholder="Password — used to log in later"
-                        value={guestAptForm.password}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            password: e.target.value,
-                          })
-                        }
-                        required
-                        minLength={6}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Row 4: Select Gender | Date of Birth */}
-                  <div className="apt-form-grid">
-                    <div className="apt-field-group">
-                      <span className="apt-field-icon">
-                        <Contact size={16} />
-                      </span>
-                      <select
-                        className="apt-field-input apt-field-select"
-                        value={guestAptForm.gender}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            gender: e.target.value,
-                          })
-                        }
-                        required
-                      >
-                        <option value="" disabled>
-                          Select Gender
-                        </option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                    <div className="apt-date-labeled">
-                      <span className="apt-date-label">Date of Birth</span>
-                      <div className="apt-field-group">
-                        <span className="apt-field-icon">
-                          <CalendarDays size={16} />
-                        </span>
-                        <input
-                          type="date"
-                          className="apt-field-input"
-                          value={guestAptForm.dob}
-                          onChange={(e) =>
-                            setGuestAptForm({
-                              ...guestAptForm,
-                              dob: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Row 5: Appointment Date | Appointment Time */}
-                  <div className="apt-form-grid">
-                    <div className="apt-date-labeled">
-                      <span className="apt-date-label">Appointment Date</span>
-                      <div className="apt-field-group">
-                        <span className="apt-field-icon">
-                          <CalendarDays size={16} />
-                        </span>
-                        <input
-                          type="date"
-                          className="apt-field-input"
-                          min={new Date().toISOString().split("T")[0]}
-                          value={guestAptForm.date}
-                          onChange={(e) =>
-                            setGuestAptForm({
-                              ...guestAptForm,
-                              date: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="apt-field-group">
-                      <span className="apt-field-icon">
-                        <Clock size={16} />
-                      </span>
-                      <select
-                        className="apt-field-input apt-field-select"
-                        value={guestAptForm.time}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            time: e.target.value,
-                          })
-                        }
-                        required
-                      >
-                        <option value="" disabled>
-                          Appointment Time
-                        </option>
-                        <option value="09:00 AM">09:00 AM</option>
-                        <option value="10:00 AM">10:00 AM</option>
-                        <option value="11:00 AM">11:00 AM</option>
-                        <option value="01:00 PM">01:00 PM</option>
-                        <option value="02:00 PM">02:00 PM</option>
-                        <option value="03:00 PM">03:00 PM</option>
-                        <option value="04:00 PM">04:00 PM</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Row 6: Select Department | Select Doctor */}
-                  <div className="apt-form-grid">
-                    <div className="apt-field-group">
-                      <span className="apt-field-icon">
-                        <Building2 size={16} />
-                      </span>
-                      <select
-                        className="apt-field-input apt-field-select"
-                        value={guestAptForm.department}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            department: e.target.value,
-                          })
-                        }
-                        required
-                      >
-                        <option value="" disabled>
-                          Select Department
-                        </option>
-                        <option value="Cardiology">Cardiology</option>
-                        <option value="Pediatrics">Pediatrics</option>
-                        <option value="Dermatology">Dermatology</option>
-                        <option value="General Medicine">
-                          General Medicine
-                        </option>
-                        <option value="Orthopedics">Orthopedics</option>
-                      </select>
-                    </div>
-                    <div className="apt-field-group">
-                      <span className="apt-field-icon">
-                        <Stethoscope size={16} />
-                      </span>
-                      <select
-                        className="apt-field-input apt-field-select"
-                        value={guestAptForm.doctorId}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            doctorId: e.target.value,
-                          })
-                        }
-                        required
-                      >
-                        <option value="" disabled>
-                          Select Doctor
-                        </option>
-                        {doctors.map((doc) => (
-                          <option key={doc.id} value={doc.id}>
-                            {doc.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Full-width: Appointment Reason */}
-                  <div className="apt-field-group apt-field-full">
-                    <textarea
-                      className="apt-field-input apt-field-textarea"
-                      placeholder="Appointment reason / chief complaint"
-                      rows={4}
-                      value={guestAptForm.complaint}
-                      onChange={(e) =>
-                        setGuestAptForm({
-                          ...guestAptForm,
-                          complaint: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  {/* ── Medical History Section ── */}
-                  <div
-                    style={{
-                      margin: "18px 0 8px",
-                      borderTop: "2px solid #e0eef5",
-                      paddingTop: 16,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        marginBottom: 14,
-                      }}
                     >
-                      <span
-                        style={{
-                          background: "#17a2b8",
-                          color: "#fff",
-                          borderRadius: 4,
-                          padding: "3px 10px",
-                          fontSize: 11,
-                          fontWeight: 700,
-                          letterSpacing: 1,
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        Medical History
-                      </span>
-                      <span style={{ fontSize: 11, color: "#888" }}>
-                        (Optional — helps your doctor prepare)
-                      </span>
-                    </div>
+                        Log In
+                    </li>
+                </ul>
+            </nav>
 
-                    {/* Blood Type | Allergies */}
-                    <div className="apt-form-grid">
-                      <div className="apt-field-group">
-                        <span className="apt-field-icon">
-                          <Activity size={16} />
-                        </span>
-                        <select
-                          className="apt-field-input apt-field-select"
-                          value={guestAptForm.bloodType}
-                          onChange={(e) =>
-                            setGuestAptForm({
-                              ...guestAptForm,
-                              bloodType: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Blood Type (optional)</option>
-                          {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map((bt) => (
-                            <option key={bt} value={bt}>{bt}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="apt-field-group">
-                        <span className="apt-field-icon">
-                          <Heart size={16} />
-                        </span>
-                        <input
-                          type="text"
-                          className="apt-field-input"
-                          placeholder="Known Allergies (e.g. Penicillin, Peanuts)"
-                          value={guestAptForm.allergies}
-                          onChange={(e) =>
-                            setGuestAptForm({
-                              ...guestAptForm,
-                              allergies: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    {/* Current Medications */}
-                    <div className="apt-field-group apt-field-full" style={{ marginBottom: 10 }}>
-                      <textarea
-                        className="apt-field-input apt-field-textarea"
-                        placeholder="Current Medications (e.g. Metformin 500mg daily, Atorvastatin 20mg)"
-                        rows={2}
-                        value={guestAptForm.currentMedications}
-                        onChange={(e) =>
-                          setGuestAptForm({
-                            ...guestAptForm,
-                            currentMedications: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-
-                    {/* Past Conditions | Previous Surgeries */}
-                    <div className="apt-form-grid">
-                      <div className="apt-field-group">
-                        <textarea
-                          className="apt-field-input apt-field-textarea"
-                          placeholder="Past Medical Conditions (e.g. Hypertension, Diabetes Type 2)"
-                          rows={2}
-                          value={guestAptForm.pastConditions}
-                          onChange={(e) =>
-                            setGuestAptForm({
-                              ...guestAptForm,
-                              pastConditions: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="apt-field-group">
-                        <textarea
-                          className="apt-field-input apt-field-textarea"
-                          placeholder="List major operations, procedures, or overnight hospital stays with approximate years (e.g., Knee replacement (Left) - Dec 2024)"
-                          rows={2}
-                          value={guestAptForm.previousSurgeries}
-                          onChange={(e) =>
-                            setGuestAptForm({
-                              ...guestAptForm,
-                              previousSurgeries: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    {/* File Upload */}
-                    <div
-                      style={{
-                        marginTop: 10,
-                        border: "1.5px dashed #b2d8e8",
-                        borderRadius: 8,
-                        padding: "14px 16px",
-                        background: "#f7fcff",
-                      }}
-                    >
-                      <label
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          cursor: "pointer",
-                          fontWeight: 600,
-                          fontSize: 13,
-                          color: "#17a2b8",
-                          marginBottom: 6,
-                        }}
-                      >
-                        <Hash size={15} />
-                        Upload Medical Documents
-                        <input
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                          multiple
-                          style={{ display: "none" }}
-                          onChange={async (e) => {
-                            const files = Array.from(e.target.files);
-                            const converted = await Promise.all(
-                              files.map(
-                                (file) =>
-                                  new Promise((resolve) => {
-                                    const reader = new FileReader();
-                                    reader.onload = (ev) =>
-                                      resolve({
-                                        name: file.name,
-                                        type: file.type,
-                                        size: file.size,
-                                        dataUrl: ev.target.result,
-                                      });
-                                    reader.readAsDataURL(file);
-                                  })
-                              )
-                            );
-                            setGuestAptForm((prev) => ({
-                              ...prev,
-                              medicalFiles: [
-                                ...prev.medicalFiles,
-                                ...converted,
-                              ],
-                            }));
-                            e.target.value = "";
-                          }}
-                        />
-                      </label>
-                      <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 8 }}>
-                        PDF, JPG, PNG, DOC — Lab results, X-rays, previous prescriptions
-                      </div>
-                      {guestAptForm.medicalFiles.length > 0 && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                          {guestAptForm.medicalFiles.map((f, idx) => (
-                            <div
-                              key={idx}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 5,
-                                background: "#e0f7fa",
-                                border: "1px solid #b2e3ed",
-                                borderRadius: 4,
-                                padding: "3px 8px",
-                                fontSize: 11,
-                                color: "#0e7490",
-                              }}
-                            >
-                              <span>{f.name}</span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setGuestAptForm((prev) => ({
-                                    ...prev,
-                                    medicalFiles: prev.medicalFiles.filter(
-                                      (_, i) => i !== idx
-                                    ),
-                                  }))
-                                }
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  color: "#e05c5c",
-                                  fontWeight: 700,
-                                  fontSize: 13,
-                                  lineHeight: 1,
-                                  padding: 0,
-                                }}
-                              >
-                                ×
-                              </button>
+            {/* 3. MAIN PUBLIC SECTIONS */}
+            <main className="flex-grow">
+                {/* ================= HOME ================= */}
+                {landingTab === "home" && (
+                    <div className="animate-fade-in">
+                        <section className="landing-hero">
+                            <div className="landing-hero-slider">
+                                {slides.map((slide, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`landing-hero-slide ${idx === currentSlide ? "active" : ""}`}
+                                    >
+                                        <div className="landing-hero-content">
+                                            <div className="landing-hero-badge-container">
+                                                <div
+                                                    className="landing-hero-badge-bar"
+                                                    style={{ backgroundColor: slide.themeColor }}
+                                                />
+                                                <span className="landing-hero-badge">
+                                                    {slide.badgeText}
+                                                </span>
+                                            </div>
+                                            <h2 className="landing-hero-title">{slide.title}</h2>
+                                            <p className="landing-hero-subtitle">{slide.subtitle}</p>
+                                            <button
+                                                onClick={() => {
+                                                    if (idx === 0) setLandingTab("contact");
+                                                    else if (idx === 1) setLandingTab("appointment");
+                                                    else setLandingTab("about");
+                                                }}
+                                                className="landing-hero-btn"
+                                                style={{ backgroundColor: slide.themeColor }}
+                                            >
+                                                {slide.buttonText} <ArrowRight size={14} />
+                                            </button>
+                                        </div>
+                                        <div
+                                            className="landing-hero-image-overlay"
+                                            style={{ backgroundImage: `url(${slide.image})` }}
+                                        />
+                                    </div>
+                                ))}
+                                <button
+                                    className="landing-hero-arrow prev"
+                                    onClick={handlePrevSlide}
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <button
+                                    className="landing-hero-arrow next"
+                                    onClick={handleNextSlide}
+                                >
+                                    <ChevronRight size={20} />
+                                </button>
                             </div>
-                          ))}
+                        </section>
+
+                        <section className="landing-section">
+                            <h3 className="landing-section-title">
+                                Our Specialized Departments
+                            </h3>
+                            <p className="landing-section-subtitle">
+                                Providing standard healthcare facilities managed by certified
+                                medical specialists.
+                            </p>
+                            <div className="landing-services-grid">
+                                <div className="landing-service-card">
+                                    <div className="landing-service-icon-wrapper">
+                                        <Heart size={24} />
+                                    </div>
+                                    <h4 className="landing-service-title">Cardiology Care</h4>
+                                    <p className="landing-service-desc">
+                                        Comprehensive heart care including preventative checks,
+                                        vascular evaluations, and personalized cardiac therapy
+                                        plans.
+                                    </p>
+                                </div>
+                                <div className="landing-service-card">
+                                    <div className="landing-service-icon-wrapper">
+                                        <UserCheck size={24} />
+                                    </div>
+                                    <h4 className="landing-service-title">Pediatric Treatment</h4>
+                                    <p className="landing-service-desc">
+                                        Compassionate medical support for children and adolescents,
+                                        focusing on development, growth monitoring, and
+                                        immunizations.
+                                    </p>
+                                </div>
+                                <div className="landing-service-card">
+                                    <div className="landing-service-icon-wrapper">
+                                        <Activity size={24} />
+                                    </div>
+                                    <h4 className="landing-service-title">General Medicine</h4>
+                                    <p className="landing-service-desc">
+                                        Broad scope health diagnostic checks, chronic disease
+                                        treatment management, and regular wellness counseling.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                )}
+
+                {/* ================= ABOUT ================= */}
+                {landingTab === "about" && (
+                    <div className="landing-section animate-fade-in">
+                        <h3 className="landing-section-title">About Our Hospital</h3>
+                        <p className="landing-section-subtitle">
+                            Learn more about our team, medical facilities, and commitment to
+                            healthcare.
+                        </p>
+
+                        <div className="landing-about-container mb-8">
+                            <div className="landing-about-content">
+                                <span className="landing-about-tag">Empowering Health</span>
+                                <h4 className="landing-about-heading">
+                                    Providing World Class Diagnostics and Treatment Planning
+                                </h4>
+                                <p className="landing-about-text">
+                                    At EverCare, we prioritize patient outcomes. With modern labs
+                                    and telemetry equipment, our doctors deliver swift and precise
+                                    health diagnostics.
+                                </p>
+                                <div className="landing-about-features">
+                                    {[
+                                        "Online Appointment Booking",
+                                        "Board-Certified Specialists",
+                                        "Secure Digital Health Records",
+                                        "24/7 Support Desk Channels",
+                                    ].map((f) => (
+                                        <div key={f} className="landing-about-feature-item">
+                                            <Check size={16} className="landing-about-feature-icon" />{" "}
+                                            {f}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <img
+                                    src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=600"
+                                    alt="Hospital Room"
+                                    className="landing-about-img"
+                                />
+                            </div>
                         </div>
-                      )}
+
+                        <div className="pt-6">
+                            <h3 className="landing-section-title">Our Medical Specialists</h3>
+                            <p className="landing-section-subtitle">
+                                Consult with our certified healthcare specialists across
+                                clinical practices.
+                            </p>
+                            <div className="landing-doctors-grid">
+                                {doctors.map((doc) => (
+                                    <div key={doc.id} className="landing-doctor-card">
+                                        <img
+                                            src={doc.avatar}
+                                            alt={doc.name}
+                                            className="landing-doctor-img"
+                                        />
+                                        <div className="landing-doctor-info">
+                                            <span className="landing-doctor-spec">
+                                                {doc.specialty}
+                                            </span>
+                                            <h4 className="landing-doctor-name">{doc.name}</h4>
+                                            <p className="landing-doctor-bio">{doc.bio}</p>
+                                            <div className="landing-doctor-meta">
+                                                <span className="landing-doctor-fee">
+                                                    ₱{doc.fee} / consult
+                                                </span>
+                                                <div className="landing-doctor-rating">
+                                                    <Star
+                                                        size={14}
+                                                        className="fill-yellow-500 text-yellow-500"
+                                                    />{" "}
+                                                    {doc.rating}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                  </div>
+                )}
 
-                  {/* Info note */}
-                  <div
-                    style={{
-                      background: "#f0fafe",
-                      border: "1px solid #b2e3ed",
-                      borderRadius: 6,
-                      padding: "10px 14px",
-                      fontSize: 12,
-                      color: "#555",
-                      marginBottom: 4,
-                    }}
-                  >
-                    <strong>Note:</strong> Your Login ID (email) and password
-                    will be used to create your Patient account. After clicking{" "}
-                    <em>Make Appointment</em>, you can log in to view your
-                    appointment status and records.
-                  </div>
+                {/* ================= APPOINTMENT ================= */}
+                {landingTab === "appointment" && (
+                    <div className="landing-section animate-fade-in">
+                        {/* SUCCESS SCREEN */}
+                        {aptSubmitted ? (
+                            <div className="apt-success-screen">
+                                <h2 className="apt-success-title">
+                                    Appointment taken successfully..
+                                </h2>
+                                <p className="apt-success-sub">
+                                    Your patient account has been created and your appointment is
+                                    pending confirmation. Use your Login ID and password to access
+                                    your Patient Dashboard.
+                                </p>
+                                <button
+                                    className="apt-success-login-link"
+                                    onClick={handleGoToLogin}
+                                >
+                                    Click here to Login.
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <h2 className="apt-form-heading">Make an Appointment</h2>
 
-                  {/* Submit Button */}
-                  <div className="apt-submit-row">
-                    <button
-                      type="submit"
-                      className="apt-submit-btn"
-                      disabled={aptLoading}
-                    >
-                      {aptLoading ? "Submitting..." : "Make Appointment"}
-                    </button>
-                  </div>
-                </form>
-              </>
-            )}
-          </div>
-        )}
+                                <form
+                                    onSubmit={handleGuestAptSubmit}
+                                    className="apt-form-wrapper"
+                                >
+                                    {/* Row 1: Patient's Name | Address */}
+                                    <div className="apt-form-grid">
+                                        <div className="apt-field-group">
+                                            <span className="apt-field-icon">
+                                                <User size={16} />
+                                            </span>
+                                            <input
+                                                type="text"
+                                                className="apt-field-input"
+                                                placeholder="Patient's Name"
+                                                value={guestAptForm.patientName}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        patientName: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                        <div className="apt-field-group">
+                                            <span className="apt-field-icon">
+                                                <Navigation size={16} />
+                                            </span>
+                                            <input
+                                                type="text"
+                                                className="apt-field-input"
+                                                placeholder="Address"
+                                                value={guestAptForm.address}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        address: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                    </div>
 
-        {/* ================= CONTACT ================= */}
-        {landingTab === "contact" && (
-          <div className="landing-section animate-fade-in">
-            <h3 className="landing-section-title">Get In Touch</h3>
-            <p className="landing-section-subtitle">
-              Have a question about clinical billing or medical records? Send us
-              a direct message.
-            </p>
+                                    {/* Row 2: City | Contact Number */}
+                                    <div className="apt-form-grid">
+                                        <div className="apt-field-group">
+                                            <span className="apt-field-icon">
+                                                <MapPin size={16} />
+                                            </span>
+                                            <input
+                                                type="text"
+                                                className="apt-field-input"
+                                                placeholder="City"
+                                                value={guestAptForm.city}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        city: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                        <div className="apt-field-group">
+                                            <span className="apt-field-icon">
+                                                <Phone size={16} />
+                                            </span>
+                                            <input
+                                                type="tel"
+                                                className="apt-field-input"
+                                                placeholder="Contact Number"
+                                                value={guestAptForm.contactNumber}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        contactNumber: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                    </div>
 
-            <div className="landing-contact-grid">
-              <div className="landing-contact-info-list">
-                <div className="landing-info-card">
-                  <div className="landing-info-icon-wrapper">
-                    <Phone size={18} />
-                  </div>
-                  <div>
-                    <h4 className="landing-info-title">Calling Center</h4>
-                    <div className="landing-info-val">
-                      095 6631 4216
+                                    {/* Row 3: Login ID | Password */}
+                                    <div className="apt-form-grid">
+                                        <div className="apt-field-group">
+                                            <span className="apt-field-icon">
+                                                <LogIn size={16} />
+                                            </span>
+                                            <input
+                                                type="email"
+                                                className="apt-field-input"
+                                                placeholder="Login ID (Email) — used to log in later"
+                                                value={guestAptForm.loginId}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        loginId: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                        <div className="apt-field-group">
+                                            <span className="apt-field-icon">
+                                                <Lock size={16} />
+                                            </span>
+                                            <input
+                                                type="password"
+                                                className="apt-field-input"
+                                                placeholder="Password — used to log in later"
+                                                value={guestAptForm.password}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        password: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                                minLength={6}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Row 4: Select Gender | Date of Birth */}
+                                    <div className="apt-form-grid">
+                                        <div className="apt-field-group">
+                                            <span className="apt-field-icon">
+                                                <Contact size={16} />
+                                            </span>
+                                            <select
+                                                className="apt-field-input apt-field-select"
+                                                value={guestAptForm.gender}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        gender: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            >
+                                                <option value="" disabled>
+                                                    Select Gender
+                                                </option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div className="apt-date-labeled">
+                                            <span className="apt-date-label">Date of Birth</span>
+                                            <div className="apt-field-group">
+                                                <span className="apt-field-icon">
+                                                    <CalendarDays size={16} />
+                                                </span>
+                                                <input
+                                                    type="date"
+                                                    className="apt-field-input"
+                                                    value={guestAptForm.dob}
+                                                    onChange={(e) =>
+                                                        setGuestAptForm({
+                                                            ...guestAptForm,
+                                                            dob: e.target.value,
+                                                        })
+                                                    }
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Row 5: Appointment Date | Appointment Time */}
+                                    <div className="apt-form-grid">
+                                        <div className="apt-date-labeled">
+                                            <span className="apt-date-label">Appointment Date</span>
+                                            <div className="apt-field-group">
+                                                <span className="apt-field-icon">
+                                                    <CalendarDays size={16} />
+                                                </span>
+                                                <input
+                                                    type="date"
+                                                    className="apt-field-input"
+                                                    min={new Date().toISOString().split("T")[0]}
+                                                    value={guestAptForm.date}
+                                                    onChange={(e) =>
+                                                        setGuestAptForm({
+                                                            ...guestAptForm,
+                                                            date: e.target.value,
+                                                        })
+                                                    }
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="apt-field-group">
+                                            <span className="apt-field-icon">
+                                                <Clock size={16} />
+                                            </span>
+                                            <select
+                                                className="apt-field-input apt-field-select"
+                                                value={guestAptForm.time}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        time: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            >
+                                                <option value="" disabled>
+                                                    Appointment Time
+                                                </option>
+                                                <option value="09:00 AM">09:00 AM</option>
+                                                <option value="10:00 AM">10:00 AM</option>
+                                                <option value="11:00 AM">11:00 AM</option>
+                                                <option value="01:00 PM">01:00 PM</option>
+                                                <option value="02:00 PM">02:00 PM</option>
+                                                <option value="03:00 PM">03:00 PM</option>
+                                                <option value="04:00 PM">04:00 PM</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Row 6: Select Department | Select Doctor */}
+                                    <div className="apt-form-grid">
+                                        <div className="apt-field-group">
+                                            <span className="apt-field-icon">
+                                                <Building2 size={16} />
+                                            </span>
+                                            <select
+                                                className="apt-field-input apt-field-select"
+                                                value={guestAptForm.department}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        department: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            >
+                                                <option value="" disabled>
+                                                    Select Department
+                                                </option>
+                                                <option value="Cardiology">Cardiology</option>
+                                                <option value="Pediatrics">Pediatrics</option>
+                                                <option value="Dermatology">Dermatology</option>
+                                                <option value="General Medicine">
+                                                    General Medicine
+                                                </option>
+                                                <option value="Orthopedics">Orthopedics</option>
+                                            </select>
+                                        </div>
+                                        <div className="apt-field-group">
+                                            <span className="apt-field-icon">
+                                                <Stethoscope size={16} />
+                                            </span>
+                                            <select
+                                                className="apt-field-input apt-field-select"
+                                                value={guestAptForm.doctorId}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        doctorId: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                            >
+                                                <option value="" disabled>
+                                                    Select Doctor
+                                                </option>
+                                                {doctors.map((doc) => (
+                                                    <option key={doc.id} value={doc.id}>
+                                                        {doc.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Full-width: Appointment Reason */}
+                                    <div className="apt-field-group apt-field-full">
+                                        <textarea
+                                            className="apt-field-input apt-field-textarea"
+                                            placeholder="Appointment reason / chief complaint"
+                                            rows={4}
+                                            value={guestAptForm.complaint}
+                                            onChange={(e) =>
+                                                setGuestAptForm({
+                                                    ...guestAptForm,
+                                                    complaint: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </div>
+
+                                    {/* ── Medical History Section ── */}
+                                    <div
+                                        style={{
+                                            margin: "18px 0 8px",
+                                            borderTop: "2px solid #e0eef5",
+                                            paddingTop: 16,
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 8,
+                                                marginBottom: 14,
+                                            }}
+                                        >
+                                            <span
+                                                style={{
+                                                    background: "#17a2b8",
+                                                    color: "#fff",
+                                                    borderRadius: 4,
+                                                    padding: "3px 10px",
+                                                    fontSize: 11,
+                                                    fontWeight: 700,
+                                                    letterSpacing: 1,
+                                                    textTransform: "uppercase",
+                                                }}
+                                            >
+                                                Medical History
+                                            </span>
+                                            <span style={{ fontSize: 11, color: "#888" }}>
+                                                (Optional — helps your doctor prepare)
+                                            </span>
+                                        </div>
+
+                                        {/* Blood Type | Allergies */}
+                                        <div className="apt-form-grid">
+                                            <div className="apt-field-group">
+                                                <span className="apt-field-icon">
+                                                    <Activity size={16} />
+                                                </span>
+                                                <select
+                                                    className="apt-field-input apt-field-select"
+                                                    value={guestAptForm.bloodType}
+                                                    onChange={(e) =>
+                                                        setGuestAptForm({
+                                                            ...guestAptForm,
+                                                            bloodType: e.target.value,
+                                                        })
+                                                    }
+                                                >
+                                                    <option value="">Blood Type (optional)</option>
+                                                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bt) => (
+                                                        <option key={bt} value={bt}>{bt}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="apt-field-group">
+                                                <span className="apt-field-icon">
+                                                    <Heart size={16} />
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    className="apt-field-input"
+                                                    placeholder="Known Allergies (e.g. Penicillin, Peanuts)"
+                                                    value={guestAptForm.allergies}
+                                                    onChange={(e) =>
+                                                        setGuestAptForm({
+                                                            ...guestAptForm,
+                                                            allergies: e.target.value,
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Current Medications */}
+                                        <div className="apt-field-group apt-field-full" style={{ marginBottom: 10 }}>
+                                            <textarea
+                                                className="apt-field-input apt-field-textarea"
+                                                placeholder="Current Medications (e.g. Metformin 500mg daily, Atorvastatin 20mg)"
+                                                rows={2}
+                                                value={guestAptForm.currentMedications}
+                                                onChange={(e) =>
+                                                    setGuestAptForm({
+                                                        ...guestAptForm,
+                                                        currentMedications: e.target.value,
+                                                    })
+                                                }
+                                            />
+                                        </div>
+
+                                        {/* Past Conditions | Previous Surgeries */}
+                                        <div className="apt-form-grid">
+                                            <div className="apt-field-group">
+                                                <textarea
+                                                    className="apt-field-input apt-field-textarea"
+                                                    placeholder="Past Medical Conditions (e.g. Hypertension, Diabetes Type 2)"
+                                                    rows={2}
+                                                    value={guestAptForm.pastConditions}
+                                                    onChange={(e) =>
+                                                        setGuestAptForm({
+                                                            ...guestAptForm,
+                                                            pastConditions: e.target.value,
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="apt-field-group">
+                                                <textarea
+                                                    className="apt-field-input apt-field-textarea"
+                                                    placeholder="List major operations, procedures, or overnight hospital stays with approximate years (e.g., Knee replacement (Left) - Dec 2024)"
+                                                    rows={2}
+                                                    value={guestAptForm.previousSurgeries}
+                                                    onChange={(e) =>
+                                                        setGuestAptForm({
+                                                            ...guestAptForm,
+                                                            previousSurgeries: e.target.value,
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* File Upload */}
+                                        <div
+                                            style={{
+                                                marginTop: 10,
+                                                border: "1.5px dashed #b2d8e8",
+                                                borderRadius: 8,
+                                                padding: "14px 16px",
+                                                background: "#f7fcff",
+                                            }}
+                                        >
+                                            <label
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 8,
+                                                    cursor: "pointer",
+                                                    fontWeight: 600,
+                                                    fontSize: 13,
+                                                    color: "#17a2b8",
+                                                    marginBottom: 6,
+                                                }}
+                                            >
+                                                <Hash size={15} />
+                                                Upload Medical Documents
+                                                <input
+                                                    type="file"
+                                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                                    multiple
+                                                    style={{ display: "none" }}
+                                                    onChange={async (e) => {
+                                                        const files = Array.from(e.target.files);
+                                                        const converted = await Promise.all(
+                                                            files.map(
+                                                                (file) =>
+                                                                    new Promise((resolve) => {
+                                                                        const reader = new FileReader();
+                                                                        reader.onload = (ev) =>
+                                                                            resolve({
+                                                                                name: file.name,
+                                                                                type: file.type,
+                                                                                size: file.size,
+                                                                                dataUrl: ev.target.result,
+                                                                            });
+                                                                        reader.readAsDataURL(file);
+                                                                    })
+                                                            )
+                                                        );
+                                                        setGuestAptForm((prev) => ({
+                                                            ...prev,
+                                                            medicalFiles: [
+                                                                ...prev.medicalFiles,
+                                                                ...converted,
+                                                            ],
+                                                        }));
+                                                        e.target.value = "";
+                                                    }}
+                                                />
+                                            </label>
+                                            <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 8 }}>
+                                                PDF, JPG, PNG, DOC — Lab results, X-rays, previous prescriptions
+                                            </div>
+                                            {guestAptForm.medicalFiles.length > 0 && (
+                                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                                    {guestAptForm.medicalFiles.map((f, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            style={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                gap: 5,
+                                                                background: "#e0f7fa",
+                                                                border: "1px solid #b2e3ed",
+                                                                borderRadius: 4,
+                                                                padding: "3px 8px",
+                                                                fontSize: 11,
+                                                                color: "#0e7490",
+                                                            }}
+                                                        >
+                                                            <span>{f.name}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    setGuestAptForm((prev) => ({
+                                                                        ...prev,
+                                                                        medicalFiles: prev.medicalFiles.filter(
+                                                                            (_, i) => i !== idx
+                                                                        ),
+                                                                    }))
+                                                                }
+                                                                style={{
+                                                                    background: "none",
+                                                                    border: "none",
+                                                                    cursor: "pointer",
+                                                                    color: "#e05c5c",
+                                                                    fontWeight: 700,
+                                                                    fontSize: 13,
+                                                                    lineHeight: 1,
+                                                                    padding: 0,
+                                                                }}
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Info note */}
+                                    <div
+                                        style={{
+                                            background: "#f0fafe",
+                                            border: "1px solid #b2e3ed",
+                                            borderRadius: 6,
+                                            padding: "10px 14px",
+                                            fontSize: 12,
+                                            color: "#555",
+                                            marginBottom: 4,
+                                        }}
+                                    >
+                                        <strong>Note:</strong> Your Login ID (email) and password
+                                        will be used to create your Patient account. After clicking{" "}
+                                        <em>Make Appointment</em>, you can log in to view your
+                                        appointment status and records.
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <div className="apt-submit-row">
+                                        <button
+                                            type="submit"
+                                            className="apt-submit-btn"
+                                            disabled={aptLoading}
+                                        >
+                                            {aptLoading ? "Submitting..." : "Make Appointment"}
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        )}
                     </div>
-                  </div>
-                </div>
-                <div className="landing-info-card">
-                  <div className="landing-info-icon-wrapper">
-                    <Mail size={18} />
-                  </div>
-                  <div>
-                    <h4 className="landing-info-title">Email Inboxes</h4>
-                    <div className="landing-info-val">
-                      druehtml@gmail.com
-                      <br />
-                      druehtml@gmail.com
-                    </div>
-                  </div>
-                </div>
-                <div className="landing-info-card">
-                  <div className="landing-info-icon-wrapper">
-                    <MapPin size={18} />
-                  </div>
-                  <div>
-                    <h4 className="landing-info-title">Clinic Address</h4>
-                    <div className="landing-info-val">
-                      095 6631 4216,
-                      <br />
-                      San Manuel, Isabela
-                    </div>
-                  </div>
-                </div>
-              </div>
+                )}
 
-              <form
-                onSubmit={handleContactSubmit}
-                className="landing-form-container"
-                style={{ margin: "0" }}
-              >
-                <div className="landing-input-group">
-                  <label className="landing-input-label">Your Full Name</label>
-                  <input
-                    type="text"
-                    className="landing-input"
-                    placeholder="John Doe"
-                    value={contactForm.name}
-                    onChange={(e) =>
-                      setContactForm({ ...contactForm, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="landing-input-group">
-                  <label className="landing-input-label">Email Address</label>
-                  <input
-                    type="email"
-                    className="landing-input"
-                    placeholder="john@example.com"
-                    value={contactForm.email}
-                    onChange={(e) =>
-                      setContactForm({ ...contactForm, email: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="landing-input-group">
-                  <label className="landing-input-label">Subject</label>
-                  <input
-                    type="text"
-                    className="landing-input"
-                    placeholder="Query regarding teleconsultation"
-                    value={contactForm.subject}
-                    onChange={(e) =>
-                      setContactForm({
-                        ...contactForm,
-                        subject: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <div className="landing-input-group">
-                  <label className="landing-input-label">Message Content</label>
-                  <textarea
-                    className="landing-input"
-                    rows="4"
-                    placeholder="Type your message details here..."
-                    value={contactForm.message}
-                    onChange={(e) =>
-                      setContactForm({
-                        ...contactForm,
-                        message: e.target.value,
-                      })
-                    }
-                    style={{ resize: "none" }}
-                    required
-                  />
-                </div>
-                <button type="submit" className="landing-form-btn">
-                  Send Message
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
+                {/* ================= CONTACT ================= */}
+                {landingTab === "contact" && (
+                    <div className="landing-section animate-fade-in">
+                        <h3 className="landing-section-title">Get In Touch</h3>
+                        <p className="landing-section-subtitle">
+                            Have a question about clinical billing or medical records? Send us
+                            a direct message.
+                        </p>
 
-        {/* ================= LOG IN / REGISTER ================= */}
-        {landingTab === "login" && (
-          <div className="plain-login-page animate-fade-in">
-            <div className="plain-login-card">
-              <div className="plain-login-header">
-                <p className="plain-login-system">HOSPITAL APPOINTMENT SYSTEM</p>
-                <h2 className="plain-login-title">
-                  {authTab === "register" ? "REGISTER" : "LOGIN"}
-                </h2>
-                <p className="plain-login-greeting">
-                  {authTab === "register"
-                    ? "Hello, Patient!"
-                    : `Hello, ${loginRole === "admin"
-                      ? "Admin!"
-                      : loginRole === "doctor"
-                        ? "Doctor!"
-                        : loginRole === "staff"
-                          ? "Medical Staff!"
-                          : "Patient!"
-                    }`}
+                        <div className="landing-contact-grid">
+                            <div className="landing-contact-info-list">
+                                <div className="landing-info-card">
+                                    <div className="landing-info-icon-wrapper">
+                                        <Phone size={18} />
+                                    </div>
+                                    <div>
+                                        <h4 className="landing-info-title">Calling Center</h4>
+                                        <div className="landing-info-val">
+                                            095 6631 4216
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="landing-info-card">
+                                    <div className="landing-info-icon-wrapper">
+                                        <Mail size={18} />
+                                    </div>
+                                    <div>
+                                        <h4 className="landing-info-title">Email Inboxes</h4>
+                                        <div className="landing-info-val">
+                                            druehtml@gmail.com
+                                            <br />
+                                            druehtml@gmail.com
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="landing-info-card">
+                                    <div className="landing-info-icon-wrapper">
+                                        <MapPin size={18} />
+                                    </div>
+                                    <div>
+                                        <h4 className="landing-info-title">Clinic Address</h4>
+                                        <div className="landing-info-val">
+                                            095 6631 4216,
+                                            <br />
+                                            San Manuel, Isabela
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form
+                                onSubmit={handleContactSubmit}
+                                className="landing-form-container"
+                                style={{ margin: "0" }}
+                            >
+                                <div className="landing-input-group">
+                                    <label className="landing-input-label">Your Full Name</label>
+                                    <input
+                                        type="text"
+                                        className="landing-input"
+                                        placeholder="John Doe"
+                                        value={contactForm.name}
+                                        onChange={(e) =>
+                                            setContactForm({ ...contactForm, name: e.target.value })
+                                        }
+                                        required
+                                    />
+                                </div>
+                                <div className="landing-input-group">
+                                    <label className="landing-input-label">Email Address</label>
+                                    <input
+                                        type="email"
+                                        className="landing-input"
+                                        placeholder="john@example.com"
+                                        value={contactForm.email}
+                                        onChange={(e) =>
+                                            setContactForm({ ...contactForm, email: e.target.value })
+                                        }
+                                        required
+                                    />
+                                </div>
+                                <div className="landing-input-group">
+                                    <label className="landing-input-label">Subject</label>
+                                    <input
+                                        type="text"
+                                        className="landing-input"
+                                        placeholder="Query regarding teleconsultation"
+                                        value={contactForm.subject}
+                                        onChange={(e) =>
+                                            setContactForm({
+                                                ...contactForm,
+                                                subject: e.target.value,
+                                            })
+                                        }
+                                        required
+                                    />
+                                </div>
+                                <div className="landing-input-group">
+                                    <label className="landing-input-label">Message Content</label>
+                                    <textarea
+                                        className="landing-input"
+                                        rows="4"
+                                        placeholder="Type your message details here..."
+                                        value={contactForm.message}
+                                        onChange={(e) =>
+                                            setContactForm({
+                                                ...contactForm,
+                                                message: e.target.value,
+                                            })
+                                        }
+                                        style={{ resize: "none" }}
+                                        required
+                                    />
+                                </div>
+                                <button type="submit" className="landing-form-btn">
+                                    Send Message
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* ================= LOG IN / REGISTER ================= */}
+                {landingTab === "login" && (
+                    <div className="plain-login-page animate-fade-in">
+                        <div className="plain-login-card">
+                            <div className="plain-login-header">
+                                <p className="plain-login-system">HOSPITAL APPOINTMENT SYSTEM</p>
+                                <h2 className="plain-login-title">
+                                    {authTab === "register" ? "REGISTER" : "LOGIN"}
+                                </h2>
+                                <p className="plain-login-greeting">
+                                    {authTab === "register"
+                                        ? "Hello, Patient!"
+                                        : `Hello, ${loginRole === "admin"
+                                            ? "Admin!"
+                                            : loginRole === "doctor"
+                                                ? "Doctor!"
+                                                : loginRole === "staff"
+                                                    ? "Medical Staff!"
+                                                    : "Patient!"
+                                        }`}
+                                </p>
+                            </div>
+
+                            {authTab === "login" ? (
+                                <form onSubmit={handleLogin} className="plain-login-form">
+                                    <div className="plain-field-group">
+                                        <span className="plain-field-icon">
+                                            <UserCheck size={15} />
+                                        </span>
+                                        <select
+                                            className="plain-field-input plain-field-select"
+                                            value={loginRole}
+                                            onChange={(e) => {
+                                                setLoginRole(e.target.value);
+                                                setEmail("");
+                                                setCaptchaVerified(false);
+                                            }}
+                                        >
+                                            <option value="admin">Admin</option>
+                                            <option value="doctor">Doctor</option>
+                                            <option value="staff">Medical Staff</option>
+                                            <option value="patient">Patient</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="plain-field-group">
+                                        <span className="plain-field-icon">
+                                            <User size={15} />
+                                        </span>
+                                        <input
+                                            type={loginRole === "patient" ? "email" : "text"}
+                                            required
+                                            placeholder={
+                                                loginRole === "patient" ? "Email Address" : "Username"
+                                            }
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="plain-field-input"
+                                        />
+                                    </div>
+
+                                    <div className="plain-field-group">
+                                        <span className="plain-field-icon">
+                                            <Lock size={15} />
+                                        </span>
+                                        <input
+                                            type="password"
+                                            required
+                                            placeholder="Password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="plain-field-input"
+                                        />
+                                    </div>
+
+                                    <label className="plain-remember-row">
+                                        <input
+                                            type="checkbox"
+                                            checked={rememberMe}
+                                            onChange={(e) => setRememberMe(e.target.checked)}
+                                            className="plain-checkbox"
+                                        />
+                                        <span className="plain-remember-text">Remember Me</span>
+                                    </label>
+
+                                    {loginRole === "patient" && (
+                                        <Captcha onVerify={setCaptchaVerified} resetKey={effectiveCaptchaKey} />
+                                    )}
+
+                                    <button type="submit" className="plain-login-btn">
+                                        LOGIN
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        className="plain-forgot-link"
+                                        onClick={() =>
+                                            showNotification(
+                                                "Please contact the administrator to reset your password.",
+                                                "info",
+                                            )
+                                        }
+                                    >
+                                        Forgot Password?
+                                    </button>
+                                </form>
+                            ) : (
+                                <form onSubmit={handleRegister} className="plain-login-form">
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px", backgroundColor: "#e0f2fe", border: "1px solid #bae6fd", borderRadius: "8px", padding: "7px 12px", marginBottom: "4px" }}>
+                                        <User size={14} color="#0284c7" />
+                                        <span style={{ fontSize: "12px", fontWeight: "600", color: "#0284c7", letterSpacing: "0.4px" }}>Patient Registration Only</span>
+                                    </div>
+                                    <div className="plain-field-group">
+                                        <span className="plain-field-icon">
+                                            <User size={15} />
+                                        </span>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Full Name"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            className="plain-field-input"
+                                        />
+                                    </div>
+                                    <div className="plain-field-group">
+                                        <span className="plain-field-icon">
+                                            <Mail size={15} />
+                                        </span>
+                                        <input
+                                            type="email"
+                                            required
+                                            placeholder="Email Address"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="plain-field-input"
+                                        />
+                                    </div>
+                                    <div className="plain-field-group">
+                                        <span className="plain-field-icon">
+                                            <Lock size={15} />
+                                        </span>
+                                        <input
+                                            type="password"
+                                            required
+                                            placeholder="Password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="plain-field-input"
+                                        />
+                                    </div>
+                                    <Captcha onVerify={setCaptchaVerified} resetKey={effectiveCaptchaKey} />
+                                    <button type="submit" className="plain-login-btn">
+                                        REGISTER
+                                    </button>
+                                </form>
+                            )}
+
+                            <div className="plain-toggle-row">
+                                <button
+                                    className={`plain-toggle-btn ${authTab === "login" ? "active" : ""}`}
+                                    onClick={() => {
+                                        setAuthTab("login");
+                                        setCaptchaVerified(false);
+                                        setLocalCaptchaReset((k) => k + 1);
+                                    }}
+                                >
+                                    Sign In
+                                </button>
+                                <span className="plain-toggle-divider">|</span>
+                                <button
+                                    className={`plain-toggle-btn ${authTab === "register" ? "active" : ""}`}
+                                    onClick={() => {
+                                        setAuthTab("register");
+                                        setCaptchaVerified(false);
+                                        setLocalCaptchaReset((k) => k + 1);
+                                    }}
+                                >
+                                    Register
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </main>
+
+            {/* 4. FOOTER */}
+            <footer className="landing-footer">
+                <div className="landing-footer-brand">EverCare Medical Clinic</div>
+                <p>
+                    Your Health is Our Top Priority. Providing Compassionate, Secure
+                    Clinical Services.
                 </p>
-              </div>
-
-              {authTab === "login" ? (
-                <form onSubmit={handleLogin} className="plain-login-form">
-                  <div className="plain-field-group">
-                    <span className="plain-field-icon">
-                      <UserCheck size={15} />
-                    </span>
-                    <select
-                      className="plain-field-input plain-field-select"
-                      value={loginRole}
-                      onChange={(e) => {
-                        setLoginRole(e.target.value);
-                        setEmail("");
-                        setCaptchaVerified(false);
-                      }}
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="doctor">Doctor</option>
-                      <option value="staff">Medical Staff</option>
-                      <option value="patient">Patient</option>
-                    </select>
-                  </div>
-
-                  <div className="plain-field-group">
-                    <span className="plain-field-icon">
-                      <User size={15} />
-                    </span>
-                    <input
-                      type={loginRole === "patient" ? "email" : "text"}
-                      required
-                      placeholder={
-                        loginRole === "patient" ? "Email Address" : "Username"
-                      }
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="plain-field-input"
-                    />
-                  </div>
-
-                  <div className="plain-field-group">
-                    <span className="plain-field-icon">
-                      <Lock size={15} />
-                    </span>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="plain-field-input"
-                    />
-                  </div>
-
-                  <label className="plain-remember-row">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="plain-checkbox"
-                    />
-                    <span className="plain-remember-text">Remember Me</span>
-                  </label>
-
-                  {loginRole === "patient" && (
-                    <Captcha onVerify={setCaptchaVerified} resetKey={effectiveCaptchaKey} />
-                  )}
-
-                  <button type="submit" className="plain-login-btn">
-                    LOGIN
-                  </button>
-
-                  <button
-                    type="button"
-                    className="plain-forgot-link"
-                    onClick={() =>
-                      showNotification(
-                        "Please contact the administrator to reset your password.",
-                        "info",
-                      )
-                    }
-                  >
-                    Forgot Password?
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleRegister} className="plain-login-form">
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", backgroundColor: "#e0f2fe", border: "1px solid #bae6fd", borderRadius: "8px", padding: "7px 12px", marginBottom: "4px" }}>
-                    <User size={14} color="#0284c7" />
-                    <span style={{ fontSize: "12px", fontWeight: "600", color: "#0284c7", letterSpacing: "0.4px" }}>Patient Registration Only</span>
-                  </div>
-                  <div className="plain-field-group">
-                    <span className="plain-field-icon">
-                      <User size={15} />
-                    </span>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Full Name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="plain-field-input"
-                    />
-                  </div>
-                  <div className="plain-field-group">
-                    <span className="plain-field-icon">
-                      <Mail size={15} />
-                    </span>
-                    <input
-                      type="email"
-                      required
-                      placeholder="Email Address"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="plain-field-input"
-                    />
-                  </div>
-                  <div className="plain-field-group">
-                    <span className="plain-field-icon">
-                      <Lock size={15} />
-                    </span>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="plain-field-input"
-                    />
-                  </div>
-                  <Captcha onVerify={setCaptchaVerified} resetKey={effectiveCaptchaKey} />
-                  <button type="submit" className="plain-login-btn">
-                    REGISTER
-                  </button>
-                </form>
-              )}
-
-              <div className="plain-toggle-row">
-                <button
-                  className={`plain-toggle-btn ${authTab === "login" ? "active" : ""}`}
-                  onClick={() => {
-                    setAuthTab("login");
-                    setCaptchaVerified(false);
-                    setLocalCaptchaReset((k) => k + 1);
-                  }}
-                >
-                  Sign In
-                </button>
-                <span className="plain-toggle-divider">|</span>
-                <button
-                  className={`plain-toggle-btn ${authTab === "register" ? "active" : ""}`}
-                  onClick={() => {
-                    setAuthTab("register");
-                    setCaptchaVerified(false);
-                    setLocalCaptchaReset((k) => k + 1);
-                  }}
-                >
-                  Register
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* 4. FOOTER */}
-      <footer className="landing-footer">
-        <div className="landing-footer-brand">EverCare Medical Clinic</div>
-        <p>
-          Your Health is Our Top Priority. Providing Compassionate, Secure
-          Clinical Services.
-        </p>
-        <div className="landing-footer-copyright">
-          © {new Date().getFullYear()} EverCare Medical System. All rights
-          reserved.
+                <div className="landing-footer-copyright">
+                    © {new Date().getFullYear()} EverCare Medical System. All rights
+                    reserved.
+                </div>
+            </footer>
         </div>
-      </footer>
-    </div>
-  );
+    );
 }
