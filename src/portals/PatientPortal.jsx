@@ -155,20 +155,6 @@ export default function PatientPortal({
         complaint,
       };
 
-      // Check for slot conflicts before booking
-      const isAvailable = await dbService.checkSlotAvailability(
-        aptData.doctorId,
-        bookingDate,
-        bookingTime
-      );
-      if (!isAvailable) {
-        showNotification(
-          `This time slot (${bookingTime} on ${bookingDate}) is already booked for ${selectedDoctor.name}. Please choose another slot.`,
-          "error"
-        );
-        setBookingLoading(false);
-        return;
-      }
       const newApt = await dbService.bookAppointment(aptData);
       await dbService.logAction(
         currentUser.email,
