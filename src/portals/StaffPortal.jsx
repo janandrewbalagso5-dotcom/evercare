@@ -84,6 +84,18 @@ export default function StaffPortal({
   showNotification,
   onLogout,
 }) {
+  const loadData = async () => {
+    try {
+      const apts = await dbService.getAppointments();
+      setAppointments(apts);
+      const pats = await dbService.getPatients();
+      setPatients(pats);
+      const txns = await dbService.getTransactions();
+      setTransactions(txns);
+    } catch (e) {
+      console.error("Failed to load staff data", e);
+    }
+  };
   const [activeView, setActiveView] = useState("dashboard");
   const [openNavGroup, setOpenNavGroup] = useState("schedule");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -123,18 +135,7 @@ export default function StaffPortal({
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      const apts = await dbService.getAppointments();
-      setAppointments(apts);
-      const pats = await dbService.getPatients();
-      setPatients(pats);
-      const txns = await dbService.getTransactions();
-      setTransactions(txns);
-    } catch (e) {
-      console.error("Failed to load staff data", e);
-    }
-  };
+
 
   /* ── actions ─────────────────────────────────────────────── */
   const handleApprove = async (aptId) => {

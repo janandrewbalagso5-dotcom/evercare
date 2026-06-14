@@ -263,6 +263,24 @@ export default function DoctorPortal({
   showNotification,
   onLogout,
 }) {
+  const loadData = async () => {
+    try {
+      const allApts = await dbService.getAppointments();
+      const docApts = allApts.filter((a) => a.doctorId === currentUser.uid);
+      setAppointments(docApts);
+      const uniqueIds = [...new Set(docApts.map((a) => a.patientId))];
+      const allPats = await dbService.getPatients();
+      setPatients(allPats.filter((p) => uniqueIds.includes(p.uid)));
+      const docs = await dbService.getDoctors();
+      const me = docs.find((d) => d.id === currentUser.uid);
+      if (me) {
+        setAvailableDays(me.availability?.days || []);
+        setAvailableHours(me.availability?.hours || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
   const [activeView, setActiveView] = useState("dashboard");
   const [openNavGroup, setOpenNavGroup] = useState("appointment");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -324,6 +342,17 @@ export default function DoctorPortal({
   useEffect(() => {
     loadData();
   }, [currentUser]);
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const cfg = await dbService.getSystemSettings();
+        if (cfg) setSettings(cfg);
+      } catch (e) {
+        console.error("Failed to load system settings", e);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // Auto-refresh appointments when navigating to appointment views
   useEffect(() => {
@@ -331,24 +360,7 @@ export default function DoctorPortal({
       loadData();
     }
   }, [activeView]);
-  const loadData = async () => {
-    try {
-      const allApts = await dbService.getAppointments();
-      const docApts = allApts.filter((a) => a.doctorId === currentUser.uid);
-      setAppointments(docApts);
-      const uniqueIds = [...new Set(docApts.map((a) => a.patientId))];
-      const allPats = await dbService.getPatients();
-      setPatients(allPats.filter((p) => uniqueIds.includes(p.uid)));
-      const docs = await dbService.getDoctors();
-      const me = docs.find((d) => d.id === currentUser.uid);
-      if (me) {
-        setAvailableDays(me.availability?.days || []);
-        setAvailableHours(me.availability?.hours || []);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
+
 
   const toggleSection = (k) =>
     setOpenSections((prev) => {
@@ -525,21 +537,9 @@ export default function DoctorPortal({
     "05:00 PM",
     "06:00 PM",
   ];
-  const treatTypes = settings.treatments && settings.treatments.length > 0
-    ? settings.treatments
-    : [
-        "Blood Test", "X-Ray", "MRI", "Ultrasound", "ECG", "Surgery", "Physiotherapy", "Vaccination", "Consultation", "Other",
-      ];
-  const medicines = settings.medicines && settings.medicines.length > 0
-    ? settings.medicines
-    : [
-        "Amoxicillin 500mg", "Paracetamol 500mg", "Ibuprofen 400mg", "Metformin 500mg", "Amlodipine 5mg", "Omeprazole 20mg", "Cetirizine 10mg", "Azithromycin 500mg",
-      ];
-  const departments = settings.departments && settings.departments.length > 0
-    ? settings.departments
-    : [
-        "Gynecology", "Cardiology", "Orthopedics", "Neurology", "Pediatrics", "Dermatology", "General Medicine",
-      ];
+  const treatTypes = settings.treatments && settings.treatments.length > 0 ? settings.treatments : ["Blood Test", "X-Ray", "MRI", "Ultrasound", "ECG", "Surgery", "Physiotherapy", "Vaccination", "Consultation", "Other"];
+  const medicines = settings.medicines && settings.medicines.length > 0 ? settings.medicines : ["Amoxicillin 500mg", "Paracetamol 500mg", "Ibuprofen 400mg", "Metformin 500mg", "Amlodipine 5mg", "Omeprazole 20mg", "Cetirizine 10mg", "Azithromycin 500mg"];
+  const departments = settings.departments && settings.departments.length > 0 ? settings.departments : ["Gynecology", "Cardiology", "Orthopedics", "Neurology", "Pediatrics", "Dermatology", "General Medicine"];
 
   const pendingApts = appointments.filter((a) => a.status === "Pending");
   const approvedApts = appointments.filter((a) => a.status === "Confirmed");

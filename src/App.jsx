@@ -195,7 +195,7 @@ export default function App() {
       } else {
         setCurrentUser(user);
         persistSession(user);
-        await dbService.logAction(
+        await await dbService.logAction(
           user.email,
           "User Login",
           `Logged in successfully via ${user.role} console.`,

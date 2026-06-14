@@ -27,9 +27,8 @@ import {
   CheckCircle,
   XCircle,
   Bell,
-  BriefcaseMedical,
-}
-from "lucide-react";
+  ClipboardList,
+} from "lucide-react";
 import { dbService } from "../services/firebase";
 import { notificationService } from "../services/notifications";
 
@@ -82,6 +81,33 @@ export default function AdminPortal({
   showNotification,
   onLogout,
 }) {
+
+  const loadData = async () => {
+    try {
+      const apts = await dbService.getAppointments();
+      const txns = await dbService.getTransactions();
+      const docs = await dbService.getDoctors();
+      const pats = await dbService.getPatients();
+      const lg = await dbService.getSystemLogs();
+      const cfg = await dbService.getSystemSettings();
+
+      setDoctors(docs);
+      setPatients(pats);
+      setAppointments(apts);
+      setLogs(lg);
+      if (cfg && Object.keys(cfg).length > 0) setSettings(cfg);
+
+      const earning = txns.reduce((s, t) => s + t.amount, 0);
+      setStats({
+        patients: pats.length,
+        doctors: docs.length,
+        admins: 1,
+        earning,
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
   const [activeView, setActiveView] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openNavGroup, setOpenNavGroup] = useState(null);
@@ -146,32 +172,7 @@ export default function AdminPortal({
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      const apts = await dbService.getAppointments();
-      const txns = await dbService.getTransactions();
-      const docs = await dbService.getDoctors();
-      const pats = await dbService.getPatients();
-      const lg = await dbService.getSystemLogs();
-      const cfg = await dbService.getSystemSettings();
 
-      setDoctors(docs);
-      setPatients(pats);
-      setAppointments(apts);
-      setLogs(lg);
-      if (cfg && Object.keys(cfg).length > 0) setSettings(cfg);
-
-      const earning = txns.reduce((s, t) => s + t.amount, 0);
-      setStats({
-        patients: pats.length,
-        doctors: docs.length,
-        admins: 1,
-        earning,
-      });
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   /* Create doctor */
   const handleAddDoctor = async (e) => {
@@ -426,15 +427,7 @@ export default function AdminPortal({
     }
   };
 
-  const specialties = settings.departments && settings.departments.length > 0
-    ? settings.departments
-    : [
-        "Cardiology",
-        "Pediatrics",
-        "Dermatology",
-        "General Medicine",
-        "Orthopedics",
-      ];
+  const specialties = settings.departments && settings.departments.length > 0 ? settings.departments : ["Cardiology", "Pediatrics", "Dermatology", "General Medicine", "Orthopedics"];
   const pendingApts = appointments.filter((a) => a.status === "Pending");
   const approvedApts = appointments.filter(
     (a) => a.status === "Confirmed" || a.status === "Approved",
@@ -577,18 +570,16 @@ export default function AdminPortal({
             <NavItem
               label="View Patient Record"
               active={activeView === "view-patient"}
-              onClick={() => { setActiveView("view-patient"); setSidebarOpen(false); }} />
+              onClick={() => { setActiveView("view-patient"); setSidebarOpen(false); }}
+            />
+            <NavItem
+              label="Manage Services"
+              active={activeView === "view-services"}
+              onClick={() => { setActiveView("view-services"); setSidebarOpen(false); }}
+            />
           </NavGroup>
-
-          {/* Manage Services */}
-          <button
-            className={`adm-nav-dashboard ${activeView === "view-services" ? "active" : ""}`}
-            onClick={() => { setActiveView("view-services"); setSidebarOpen(false); }}
-          >
-            <BriefcaseMedical size={16} />
-            <span>Manage Services</span>
-          </button>
         </aside>
+
         {/* ── MAIN CONTENT ── */}
         <main className="adm-main">
           {/* ===== DASHBOARD ===== */}
@@ -1359,9 +1350,7 @@ export default function AdminPortal({
                   + Add Patient
                 </button>
               </div>
-
-          {/* ===== MANAGE SERVICES ===== */}
-<div className="adm-form-card">
+              <div className="adm-form-card">
                 <div className="adm-table-scroll">
                   <table className="adm-table">
                     <thead>
@@ -1392,28 +1381,18 @@ export default function AdminPortal({
             </div>
           )}
 
+          {/* ===== MANAGE SERVICES ===== */}
           {activeView === "view-services" && (
             <div className="adm-content-panel">
               <div className="adm-panel-header">
                 <h2 className="adm-panel-title">Manage Hospital Services</h2>
               </div>
-
               <div className="adm-form-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
-                {/* Departments */}
                 <div className="adm-form-card">
                   <h3 className="adm-panel-sub" style={{ fontWeight: "bold", marginBottom: "10px" }}>Departments (Specialties)</h3>
                   <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
-                    <input
-                      type="text"
-                      className="adm-input"
-                      placeholder="e.g. Neurology"
-                      id="new-dept"
-                      onKeyPress={(e) => { if(e.key === "Enter") { const v = e.target.value; if(v) { setSettings(s => ({...s, departments: [...(s.departments||[]), v]})); e.target.value = ""; } } }}
-                    />
-                    <button
-                      className="adm-btn-primary"
-                      onClick={() => { const el = document.getElementById("new-dept"); if(el.value) { setSettings(s => ({...s, departments: [...(s.departments||[]), el.value]})); el.value = ""; } }}
-                    >+</button>
+                    <input type="text" className="adm-input" placeholder="e.g. Neurology" id="new-dept" onKeyPress={(e) => { if(e.key === "Enter") { const v = e.target.value; if(v) { setSettings(s => ({...s, departments: [...(s.departments||[]), v]})); e.target.value = ""; } } }} />
+                    <button className="adm-btn-primary" onClick={() => { const el = document.getElementById("new-dept"); if(el.value) { setSettings(s => ({...s, departments: [...(s.departments||[]), el.value]})); el.value = ""; } }}>+</button>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {(settings.departments || []).map((d, i) => (
@@ -1423,22 +1402,11 @@ export default function AdminPortal({
                     ))}
                   </div>
                 </div>
-
-                {/* Treatments */}
                 <div className="adm-form-card">
                   <h3 className="adm-panel-sub" style={{ fontWeight: "bold", marginBottom: "10px" }}>Treatment Types</h3>
                   <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
-                    <input
-                      type="text"
-                      className="adm-input"
-                      placeholder="e.g. X-Ray"
-                      id="new-treat"
-                      onKeyPress={(e) => { if(e.key === "Enter") { const v = e.target.value; if(v) { setSettings(s => ({...s, treatments: [...(s.treatments||[]), v]})); e.target.value = ""; } } }}
-                    />
-                    <button
-                      className="adm-btn-primary"
-                      onClick={() => { const el = document.getElementById("new-treat"); if(el.value) { setSettings(s => ({...s, treatments: [...(s.treatments||[]), el.value]})); el.value = ""; } }}
-                    >+</button>
+                    <input type="text" className="adm-input" placeholder="e.g. X-Ray" id="new-treat" onKeyPress={(e) => { if(e.key === "Enter") { const v = e.target.value; if(v) { setSettings(s => ({...s, treatments: [...(s.treatments||[]), v]})); e.target.value = ""; } } }} />
+                    <button className="adm-btn-primary" onClick={() => { const el = document.getElementById("new-treat"); if(el.value) { setSettings(s => ({...s, treatments: [...(s.treatments||[]), el.value]})); el.value = ""; } }}>+</button>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {(settings.treatments || []).map((t, i) => (
@@ -1448,22 +1416,11 @@ export default function AdminPortal({
                     ))}
                   </div>
                 </div>
-
-                {/* Medicines */}
                 <div className="adm-form-card">
                   <h3 className="adm-panel-sub" style={{ fontWeight: "bold", marginBottom: "10px" }}>Pharmacy / Medicines</h3>
                   <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
-                    <input
-                      type="text"
-                      className="adm-input"
-                      placeholder="e.g. Paracetamol 500mg"
-                      id="new-med"
-                      onKeyPress={(e) => { if(e.key === "Enter") { const v = e.target.value; if(v) { setSettings(s => ({...s, medicines: [...(s.medicines||[]), v]})); e.target.value = ""; } } }}
-                    />
-                    <button
-                      className="adm-btn-primary"
-                      onClick={() => { const el = document.getElementById("new-med"); if(el.value) { setSettings(s => ({...s, medicines: [...(s.medicines||[]), el.value]})); el.value = ""; } }}
-                    >+</button>
+                    <input type="text" className="adm-input" placeholder="e.g. Paracetamol 500mg" id="new-med" onKeyPress={(e) => { if(e.key === "Enter") { const v = e.target.value; if(v) { setSettings(s => ({...s, medicines: [...(s.medicines||[]), v]})); e.target.value = ""; } } }} />
+                    <button className="adm-btn-primary" onClick={() => { const el = document.getElementById("new-med"); if(el.value) { setSettings(s => ({...s, medicines: [...(s.medicines||[]), el.value]})); el.value = ""; } }}>+</button>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {(settings.medicines || []).map((m, i) => (
@@ -1474,22 +1431,8 @@ export default function AdminPortal({
                   </div>
                 </div>
               </div>
-
               <div style={{ marginTop: "20px" }}>
-                <button
-                  className="adm-btn-primary"
-                  style={{ width: "100%", padding: "12px" }}
-                  onClick={async () => {
-                    try {
-                      await dbService.updateSystemSettings(settings);
-                      showNotification("Hospital services updated successfully!", "success");
-                    } catch (e) {
-                      showNotification("Update failed: " + e.message, "error");
-                    }
-                  }}
-                >
-                  Save All Changes
-                </button>
+                <button className="adm-btn-primary" style={{ width: "100%", padding: "12px" }} onClick={async () => { try { await dbService.updateSystemSettings(settings); showNotification("Hospital services updated successfully!", "success"); } catch (e) { showNotification("Update failed: " + e.message, "error"); } }}>Save All Changes</button>
               </div>
             </div>
           )}

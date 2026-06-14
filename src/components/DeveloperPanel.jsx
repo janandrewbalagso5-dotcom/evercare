@@ -32,13 +32,11 @@ export default function DeveloperPanel({
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  // Fetch DB mode
   useEffect(() => {
     const checkMode = async () => {
       try {
         const isMock = await dbService.isMockMode();
-        setDbMode(isMock ? "Mock (LocalStorage)" : "Live (Firebase)");
+        setDbMode(isMock ? "Mock (LocalStorage)" : "Live (Connected)");
       } catch (e) {
         setDbMode("Live (Connected)");
       }
@@ -66,31 +64,23 @@ export default function DeveloperPanel({
 
   const handleResetDB = async () => {
     if (window.confirm("Are you sure you want to restore the database to its clean seeded state? This will delete custom bookings.")) {
-      try {
-        await dbService.resetMockDatabase();
-        alert("Database successfully restored! Reloading page...");
-        window.location.reload();
-      } catch (e) {
-        alert("Failed to reset database: " + e.message);
-      }
+      await dbService.resetMockDatabase();
+      alert("Database successfully restored! Reloading page...");
+      window.location.reload();
     }
   };
 
   const handleExportBackup = async () => {
-    try {
-      const backupStr = await dbService.getDatabaseBackup();
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(backupStr);
+    const backupStr = await dbService.getDatabaseBackup();
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(backupStr);
 
-      const exportFileDefaultName = `evercare_db_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    const exportFileDefaultName = `evercare_db_backup_${new Date().toISOString().slice(0, 10)}.json`;
 
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      linkElement.click();
-      await dbService.logAction(currentUser?.email || "system", "Database Backup", "Database backup file downloaded.");
-    } catch (e) {
-      alert("Failed to export backup: " + e.message);
-    }
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    dbService.logAction(currentUser?.email || "system", "Database Backup", "Database backup file downloaded.");
   };
 
   return (

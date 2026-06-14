@@ -124,8 +124,7 @@ export const dbService = {
   },
 
   // ------------------------------------------
-  // FILE UPLOAD (still simulated — Firebase Storage
-  // would need separate setup)
+  // FILE UPLOAD (still simulated)
   // ------------------------------------------
   uploadFile: async (filePath, fileObject) => {
     console.log(`Upload: ${fileObject.name} to ${filePath}`);

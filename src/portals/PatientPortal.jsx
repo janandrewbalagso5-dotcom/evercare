@@ -71,6 +71,20 @@ export default function PatientPortal({
   showNotification,
   onLogout,
 }) {
+  const loadData = async () => {
+    try {
+      const allApts = await dbService.getAppointments();
+      const patientApts = allApts.filter(
+        (a) => a.patientId === currentUser.uid,
+      );
+      setAppointments(patientApts);
+      const allDocs = await dbService.getDoctors();
+      setDoctors(allDocs);
+      setFilteredDoctors(allDocs);
+    } catch (e) {
+      console.error(e);
+    }
+  };
   const [activeView, setActiveView] = useState("dashboard");
   const [dashTab, setDashTab] = useState("registration"); // 'registration' | 'appointment'
   const [openNavGroup, setOpenNavGroup] = useState(null);
@@ -105,20 +119,7 @@ export default function PatientPortal({
     loadData();
   }, [currentUser, refreshKey]);
 
-  const loadData = async () => {
-    try {
-      const allApts = await dbService.getAppointments();
-      const patientApts = allApts.filter(
-        (a) => a.patientId === currentUser.uid,
-      );
-      setAppointments(patientApts);
-      const allDocs = await dbService.getDoctors();
-      setDoctors(allDocs);
-      setFilteredDoctors(allDocs);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+
 
   useEffect(() => {
     let result = doctors;
