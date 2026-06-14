@@ -72,10 +72,7 @@ function StatCard({ label, value, icon, iconColor }) {
   );
 }
 
-const specialties = [
-  "Cardiology", "Pediatrics", "Dermatology", "General Medicine",
-  "Orthopedics", "Neurology", "Ophthalmology", "ENT", "Psychiatry", "Oncology",
-];
+
 
 export default function AdminPortal({ currentUser, showNotification, onLogout }) {
   const [activeView, setActiveView] = useState("dashboard");
@@ -108,6 +105,9 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
     { id: "dep_5", name: "Orthopedics", description: "Bone, joint, and muscle treatment" },
   ]);
   const [newDepartment, setNewDepartment] = useState({ name: "", description: "" });
+
+  // Derived: specialties always mirror the departments list
+  const specialties = departments.map((d) => d.name);
 
   const [treatmentTypes, setTreatmentTypes] = useState([
     { id: "tr_1", name: "Consultation", cost: 1000, status: "Active", note: "Standard doctor consultation" },
@@ -270,7 +270,9 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
   const handleAddDepartment = (e) => {
     e.preventDefault();
     if (!newDepartment.name.trim()) return;
-    setDepartments([...departments, { id: "dep_" + Date.now(), ...newDepartment }]);
+    const updated = [...departments, { id: "dep_" + Date.now(), ...newDepartment }];
+    setDepartments(updated);
+    if (!newDoc.specialty) setNewDoc((d) => ({ ...d, specialty: updated[0].name }));
     showNotification("Department added!", "success");
     setNewDepartment({ name: "", description: "" });
   };
