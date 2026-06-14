@@ -72,6 +72,7 @@ export default function PatientPortal({
     onLogout,
 }) {
     const [activeView, setActiveView] = useState("dashboard");
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [dashTab, setDashTab] = useState("registration"); // 'registration' | 'appointment'
     const [openNavGroup, setOpenNavGroup] = useState(null);
     const toggleNavGroup = (key) =>
@@ -258,13 +259,15 @@ export default function PatientPortal({
         <div className="adm-layout">
             {/* ── TOP BAR ── */}
             <header className="adm-topbar">
+                <button
+                    className="adm-hamburger"
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                >
+                    ☰
+                </button>
                 <h1 className="adm-system-title">Hospital Appointment System</h1>
                 {onLogout && (
-                    <button
-                        className="adm-topbar-logout"
-                        onClick={onLogout}
-                        title="Sign Out"
-                    >
+                    <button className="adm-topbar-logout" onClick={onLogout} title="Sign Out">
                         <LogOut size={15} />
                     </button>
                 )}
@@ -272,7 +275,7 @@ export default function PatientPortal({
 
             <div className="adm-body">
                 {/* ── SIDEBAR ── */}
-                <aside className="adm-sidebar">
+                <aside className={`adm-sidebar ${sidebarOpen ? "open" : ""}`}>
                     <div className="adm-sidebar-label">MAIN NAVIGATION</div>
 
                     {/* Dashboard */}
@@ -904,7 +907,7 @@ export default function PatientPortal({
                                                     onChange={(e) => setComplaint(e.target.value)}
                                                 />
                                             </div>
-                                            
+
                                             <div className="adm-field" style={{ marginTop: 12, borderTop: "2px solid #e0eef5", paddingTop: 12 }}>
                                                 <label className="adm-label">Blood Type</label>
                                                 <select className="adm-input" value={medicalHistory.bloodType} onChange={(e) => setMedicalHistory({ ...medicalHistory, bloodType: e.target.value })}>
