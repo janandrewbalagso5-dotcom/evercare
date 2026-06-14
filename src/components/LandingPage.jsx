@@ -111,6 +111,13 @@ export default function LandingPage({
     department: "",
     doctorId: "",
     complaint: "",
+    // Medical history fields
+    bloodType: "",
+    allergies: "",
+    currentMedications: "",
+    pastConditions: "",
+    previousSurgeries: "",
+    medicalFiles: [], // [{name, type, dataUrl}]
   });
 
   useEffect(() => {
@@ -208,6 +215,14 @@ export default function LandingPage({
         time: guestAptForm.time,
         fee: selectedDoc.fee,
         complaint: guestAptForm.complaint,
+        medicalHistory: {
+          bloodType: guestAptForm.bloodType,
+          allergies: guestAptForm.allergies,
+          currentMedications: guestAptForm.currentMedications,
+          pastConditions: guestAptForm.pastConditions,
+          previousSurgeries: guestAptForm.previousSurgeries,
+          files: guestAptForm.medicalFiles,
+        },
       });
 
       // 5. Log the action
@@ -844,6 +859,239 @@ export default function LandingPage({
                         })
                       }
                     />
+                  </div>
+
+                  {/* ── Medical History Section ── */}
+                  <div
+                    style={{
+                      margin: "18px 0 8px",
+                      borderTop: "2px solid #e0eef5",
+                      paddingTop: 16,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 14,
+                      }}
+                    >
+                      <span
+                        style={{
+                          background: "#17a2b8",
+                          color: "#fff",
+                          borderRadius: 4,
+                          padding: "3px 10px",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          letterSpacing: 1,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Medical History
+                      </span>
+                      <span style={{ fontSize: 11, color: "#888" }}>
+                        (Optional — helps your doctor prepare)
+                      </span>
+                    </div>
+
+                    {/* Blood Type | Allergies */}
+                    <div className="apt-form-grid">
+                      <div className="apt-field-group">
+                        <span className="apt-field-icon">
+                          <Activity size={16} />
+                        </span>
+                        <select
+                          className="apt-field-input apt-field-select"
+                          value={guestAptForm.bloodType}
+                          onChange={(e) =>
+                            setGuestAptForm({
+                              ...guestAptForm,
+                              bloodType: e.target.value,
+                            })
+                          }
+                        >
+                          <option value="">Blood Type (optional)</option>
+                          {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map((bt) => (
+                            <option key={bt} value={bt}>{bt}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="apt-field-group">
+                        <span className="apt-field-icon">
+                          <Heart size={16} />
+                        </span>
+                        <input
+                          type="text"
+                          className="apt-field-input"
+                          placeholder="Known Allergies (e.g. Penicillin, Peanuts)"
+                          value={guestAptForm.allergies}
+                          onChange={(e) =>
+                            setGuestAptForm({
+                              ...guestAptForm,
+                              allergies: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {/* Current Medications */}
+                    <div className="apt-field-group apt-field-full" style={{ marginBottom: 10 }}>
+                      <textarea
+                        className="apt-field-input apt-field-textarea"
+                        placeholder="Current Medications (e.g. Metformin 500mg daily, Atorvastatin 20mg)"
+                        rows={2}
+                        value={guestAptForm.currentMedications}
+                        onChange={(e) =>
+                          setGuestAptForm({
+                            ...guestAptForm,
+                            currentMedications: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    {/* Past Conditions | Previous Surgeries */}
+                    <div className="apt-form-grid">
+                      <div className="apt-field-group">
+                        <textarea
+                          className="apt-field-input apt-field-textarea"
+                          placeholder="Past Medical Conditions (e.g. Hypertension, Diabetes Type 2)"
+                          rows={2}
+                          value={guestAptForm.pastConditions}
+                          onChange={(e) =>
+                            setGuestAptForm({
+                              ...guestAptForm,
+                              pastConditions: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="apt-field-group">
+                        <textarea
+                          className="apt-field-input apt-field-textarea"
+                          placeholder="Previous Surgeries / Hospitalizations (e.g. Appendectomy 2019)"
+                          rows={2}
+                          value={guestAptForm.previousSurgeries}
+                          onChange={(e) =>
+                            setGuestAptForm({
+                              ...guestAptForm,
+                              previousSurgeries: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {/* File Upload */}
+                    <div
+                      style={{
+                        marginTop: 10,
+                        border: "1.5px dashed #b2d8e8",
+                        borderRadius: 8,
+                        padding: "14px 16px",
+                        background: "#f7fcff",
+                      }}
+                    >
+                      <label
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: 13,
+                          color: "#17a2b8",
+                          marginBottom: 6,
+                        }}
+                      >
+                        <Hash size={15} />
+                        Upload Medical Documents
+                        <input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                          multiple
+                          style={{ display: "none" }}
+                          onChange={async (e) => {
+                            const files = Array.from(e.target.files);
+                            const converted = await Promise.all(
+                              files.map(
+                                (file) =>
+                                  new Promise((resolve) => {
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) =>
+                                      resolve({
+                                        name: file.name,
+                                        type: file.type,
+                                        size: file.size,
+                                        dataUrl: ev.target.result,
+                                      });
+                                    reader.readAsDataURL(file);
+                                  })
+                              )
+                            );
+                            setGuestAptForm((prev) => ({
+                              ...prev,
+                              medicalFiles: [
+                                ...prev.medicalFiles,
+                                ...converted,
+                              ],
+                            }));
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                      <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 8 }}>
+                        PDF, JPG, PNG, DOC — Lab results, X-rays, previous prescriptions
+                      </div>
+                      {guestAptForm.medicalFiles.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                          {guestAptForm.medicalFiles.map((f, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                                background: "#e0f7fa",
+                                border: "1px solid #b2e3ed",
+                                borderRadius: 4,
+                                padding: "3px 8px",
+                                fontSize: 11,
+                                color: "#0e7490",
+                              }}
+                            >
+                              <span>{f.name}</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setGuestAptForm((prev) => ({
+                                    ...prev,
+                                    medicalFiles: prev.medicalFiles.filter(
+                                      (_, i) => i !== idx
+                                    ),
+                                  }))
+                                }
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  color: "#e05c5c",
+                                  fontWeight: 700,
+                                  fontSize: 13,
+                                  lineHeight: 1,
+                                  padding: 0,
+                                }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Info note */}
