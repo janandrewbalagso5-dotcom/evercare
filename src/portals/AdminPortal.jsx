@@ -121,19 +121,39 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
   // Derived: specialties always mirror the live departments list
   const specialties = departments.map((d) => d.name);
 
-  const [treatmentTypes, setTreatmentTypes] = useState([
+  const DEFAULT_TREATMENTS = [
     { id: "tr_1", name: "Consultation", cost: 1000, status: "Active", note: "Standard doctor consultation" },
     { id: "tr_2", name: "ECG", cost: 800, status: "Active", note: "Electrocardiogram test" },
     { id: "tr_3", name: "Blood Test", cost: 500, status: "Active", note: "Complete blood count and analysis" },
-  ]);
+  ];
+  const [treatmentTypes, setTreatmentTypes] = useState(() => {
+    try {
+      const stored = localStorage.getItem("evercare_treatments");
+      return stored ? JSON.parse(stored) : DEFAULT_TREATMENTS;
+    } catch { return DEFAULT_TREATMENTS; }
+  });
   const [newTreatment, setNewTreatment] = useState({ name: "", cost: "", status: "Active", note: "" });
 
-  const [medicines, setMedicines] = useState([
+  useEffect(() => {
+    localStorage.setItem("evercare_treatments", JSON.stringify(treatmentTypes));
+  }, [treatmentTypes]);
+
+  const DEFAULT_MEDICINES = [
     { id: "med_1", name: "Metoprolol", type: "Tablet", stock: 100, status: "Available" },
     { id: "med_2", name: "Amoxicillin", type: "Capsule", stock: 200, status: "Available" },
     { id: "med_3", name: "Ibuprofen", type: "Tablet", stock: 50, status: "Low Stock" },
-  ]);
+  ];
+  const [medicines, setMedicines] = useState(() => {
+    try {
+      const stored = localStorage.getItem("evercare_medicines");
+      return stored ? JSON.parse(stored) : DEFAULT_MEDICINES;
+    } catch { return DEFAULT_MEDICINES; }
+  });
   const [newMedicine, setNewMedicine] = useState({ name: "", type: "Tablet", stock: "", status: "Available" });
+
+  useEffect(() => {
+    localStorage.setItem("evercare_medicines", JSON.stringify(medicines));
+  }, [medicines]);
 
   // ── Doctor / Patient forms ─────────────────────────────────────
   const [newDoc, setNewDoc] = useState({
