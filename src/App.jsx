@@ -240,9 +240,9 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (currentUser) {
-      dbService.logAction(
+      await dbService.logAction(
         currentUser.email,
         "User Logout",
         "Logged out from system session.",
@@ -259,11 +259,11 @@ export default function App() {
     showNotification("Logged out successfully.", "info");
   };
 
-  const handle2FAVerify = (success) => {
+  const handle2FAVerify = async (success) => {
     if (success && twoFactorUser) {
       setCurrentUser(twoFactorUser);
       persistSession(twoFactorUser);
-      dbService.logAction(
+      await dbService.logAction(
         twoFactorUser.email,
         "MFA Verification Cleared",
         "Successful login after 2FA challenge.",
