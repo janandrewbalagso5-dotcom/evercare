@@ -32,8 +32,8 @@ Calling setState synchronously within an effect body causes cascading renders th
 
 /app/src/components/DeveloperPanel.jsx
    1:8   error  'React' is defined but never used               no-unused-vars
-  24:18  error  'setDbMode' is assigned a value but never used  no-unused-vars
   25:18  error  'setUptime' is assigned a value but never used  no-unused-vars
+  42:16  error  'e' is defined but never used                   no-unused-vars
 
 /app/src/components/LandingPage.jsx
    1:8  error  'React' is defined but never used            no-unused-vars

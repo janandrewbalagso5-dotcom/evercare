@@ -21,7 +21,7 @@ export default function DeveloperPanel({
   onRecoverCrash
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [dbMode, setDbMode] = useState(dbService.isMockMode() ? "Mock (LocalStorage)" : "Live (Firebase)");
+  const [dbMode, setDbMode] = useState("Detecting...");
   const [uptime, setUptime] = useState(99.98);
   const [sessionUptime, setSessionUptime] = useState(0);
 
@@ -31,6 +31,19 @@ export default function DeveloperPanel({
       setSessionUptime(prev => prev + 1);
     }, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Fetch DB mode
+  useEffect(() => {
+    const checkMode = async () => {
+      try {
+        const isMock = await dbService.isMockMode();
+        setDbMode(isMock ? "Mock (LocalStorage)" : "Live (Firebase)");
+      } catch (e) {
+        setDbMode("Live (Connected)");
+      }
+    };
+    checkMode();
   }, []);
 
   const formatUptimeSession = (seconds) => {
@@ -44,32 +57,40 @@ export default function DeveloperPanel({
       const user = await dbService.getUser(email);
       if (user) {
         setCurrentUser(user);
-        dbService.logAction(user.email, "Developer Overwrite", `Role-switched via Developer Control Panel.`);
+        await dbService.logAction(user.email, "Developer Overwrite", `Role-switched via Developer Control Panel.`);
       }
     } catch (e) {
       console.error("Failed to switch role", e);
     }
   };
 
-  const handleResetDB = () => {
+  const handleResetDB = async () => {
     if (window.confirm("Are you sure you want to restore the database to its clean seeded state? This will delete custom bookings.")) {
-      dbService.resetMockDatabase();
-      alert("Database successfully restored! Reloading page...");
-      window.location.reload();
+      try {
+        await dbService.resetMockDatabase();
+        alert("Database successfully restored! Reloading page...");
+        window.location.reload();
+      } catch (e) {
+        alert("Failed to reset database: " + e.message);
+      }
     }
   };
 
-  const handleExportBackup = () => {
-    const backupStr = dbService.getDatabaseBackup();
-    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(backupStr);
+  const handleExportBackup = async () => {
+    try {
+      const backupStr = await dbService.getDatabaseBackup();
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(backupStr);
 
-    const exportFileDefaultName = `evercare_db_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      const exportFileDefaultName = `evercare_db_backup_${new Date().toISOString().slice(0, 10)}.json`;
 
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-    dbService.logAction(currentUser?.email || "system", "Database Backup", "Database backup file downloaded.");
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      await dbService.logAction(currentUser?.email || "system", "Database Backup", "Database backup file downloaded.");
+    } catch (e) {
+      alert("Failed to export backup: " + e.message);
+    }
   };
 
   return (
