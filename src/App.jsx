@@ -233,8 +233,9 @@ export default function App() {
         "Account created successfully! Logging you in...",
         "success",
       );
-      setCurrentUser(newUser);
-      persistSession(newUser);
+      setAuthTab("login");
+setEmail(email);
+showNotification("Account created! Please log in.", "success");
     } catch (error) {
       showNotification("Registration failed: " + error.message, "error");
     }
