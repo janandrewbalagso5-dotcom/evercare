@@ -70,22 +70,6 @@ export const dbService = {
     }),
 
   // ------------------------------------------
-  // SLOT CONFLICT CHECK
-  // ------------------------------------------
-  checkSlotAvailability: async (doctorId, date, time, excludeAptId = null) => {
-    const allApts = await apiFetch("/api/appointments");
-    const conflict = allApts.find(
-      (a) =>
-        a.doctorId === doctorId &&
-        a.date === date &&
-        a.time === time &&
-        a.status !== "Cancelled" &&
-        a.id !== excludeAptId
-    );
-    return !conflict; // true = slot is available
-  },
-
-  // ------------------------------------------
   // TRANSACTION ACTIONS
   // ------------------------------------------
   getTransactions: () => apiFetch("/api/transactions"),
