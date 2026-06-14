@@ -228,11 +228,6 @@ export default function App() {
         bloodType: "B+",
         address: "Metropolitan Manila",
       });
-
-      showNotification(
-        "Account created successfully! Logging you in...",
-        "success",
-      );
       setAuthTab("login");
 setEmail(email);
 showNotification("Account created! Please log in.", "success");
