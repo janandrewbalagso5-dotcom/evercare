@@ -3811,3 +3811,33 @@ td {
     display: flex !important;
   }
 }
+
+/* ── Mobile table fix ── */
+@media (max-width: 768px) {
+  .adm-form-card,
+  .adm-white-card {
+    padding: 12px 8px;
+    overflow-x: auto;
+  }
+
+  .adm-table {
+    min-width: 600px;
+  }
+
+  /* Sidebar pushes content, don't let it overlap */
+  .adm-sidebar.open {
+    width: 220px;
+  }
+
+  /* Panel header stack on mobile */
+  .adm-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Add appointment grid: single column */
+  .adm-content-panel div[style*="gridTemplateColumns: 1fr 340px"] {
+    grid-template-columns: 1fr !important;
+  }
+}
