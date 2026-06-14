@@ -972,7 +972,7 @@ export default function LandingPage({
                       <div className="apt-field-group">
                         <textarea
                           className="apt-field-input apt-field-textarea"
-                          placeholder="Previous Surgeries / Hospitalizations (e.g. Appendectomy 2019)"
+                          placeholder="List major operations, procedures, or overnight hospital stays with approximate years"
                           rows={2}
                           value={guestAptForm.previousSurgeries}
                           onChange={(e) =>
