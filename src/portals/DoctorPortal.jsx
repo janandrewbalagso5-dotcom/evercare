@@ -286,6 +286,7 @@ export default function DoctorPortal({
     });
 
     /* ── patient report panel ── */
+    const [reportSource, setReportSource] = useState("apt-approved");
     const [reportPatient, setReportPatient] = useState(null);
     const [openSections, setOpenSections] = useState({
         profile: false,
@@ -882,7 +883,7 @@ export default function DoctorPortal({
                                                                 }}
                                                                 onClick={() => {
                                                                     const pat = patients.find((p) => p.uid === apt.patientId);
-                                                                    if (pat) openReport(pat);
+                                                                    if (pat) { setReportSource("apt-pending"); openReport(pat); }
                                                                     else showNotification("Patient record not found.", "info");
                                                                 }}
                                                             >
@@ -1051,7 +1052,7 @@ export default function DoctorPortal({
                                                                 }}
                                                                 title={pat ? "Open patient report" : "Patient record not found"}
                                                                 onClick={() => {
-                                                                    if (pat) openReport(pat);
+                                                                    if (pat) { setReportSource("apt-approved"); openReport(pat); }
                                                                     else showNotification("Patient record not found. They may have registered via the appointment form.", "info");
                                                                 }}
                                                             >
@@ -1433,7 +1434,7 @@ export default function DoctorPortal({
             {activeView === "report-panel" && reportPatient && (
                 <SlidePanel
                     title="Patient Report Panel"
-                    onClose={() => setActiveView("apt-approved")}
+                    onClose={() => setActiveView(reportSource)}
                 >
                     <AccordionSection
                         label="Medical History"
