@@ -1361,37 +1361,6 @@ export default function AdminPortal({
               </div>
 
           {/* ===== MANAGE SERVICES ===== */}
-<div className="adm-form-card">
-                <div className="adm-table-scroll">
-                  <table className="adm-table">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Gender</th>
-                        <th>Phone</th>
-                        <th>Blood Type</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {patients.map((p, i) => (
-                        <tr key={p.uid || i}>
-                          <td>{i + 1}</td>
-                          <td>{p.name}</td>
-                          <td>{p.email}</td>
-                          <td>{p.gender || "—"}</td>
-                          <td>{p.phone || "—"}</td>
-                          <td>{p.bloodType || "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeView === "view-services" && (
             <div className="adm-content-panel">
               <div className="adm-panel-header">
@@ -1490,6 +1459,36 @@ export default function AdminPortal({
                 >
                   Save All Changes
                 </button>
+              </div>
+            </div>
+          )}
+              <div className="adm-form-card">
+                <div className="adm-table-scroll">
+                  <table className="adm-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Gender</th>
+                        <th>Phone</th>
+                        <th>Blood Type</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {patients.map((p, i) => (
+                        <tr key={p.uid || i}>
+                          <td>{i + 1}</td>
+                          <td>{p.name}</td>
+                          <td>{p.email}</td>
+                          <td>{p.gender || "—"}</td>
+                          <td>{p.phone || "—"}</td>
+                          <td>{p.bloodType || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
