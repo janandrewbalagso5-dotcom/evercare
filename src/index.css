@@ -3841,3 +3841,15 @@ td {
     grid-template-columns: 1fr !important;
   }
 }
+
+.apt-booking-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .apt-booking-grid {
+    grid-template-columns: 1fr;
+  }
+}
