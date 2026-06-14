@@ -365,7 +365,6 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
           </NavGroup>
 
           <NavGroup icon={<Database size={16} />} label="Services" isOpen={openNavGroup === "services"} onToggle={() => toggleNavGroup("services")}>
-            <NavItem label="Manage Services" active={activeView === "view-services"} onClick={() => nav("view-services")} />
             <NavItem label="Departments" active={activeView === "view-department"} onClick={() => nav("view-department")} />
             <NavItem label="Add Department" active={activeView === "add-department"} onClick={() => nav("add-department")} />
             <NavItem label="Treatment Types" active={activeView === "view-treatment"} onClick={() => nav("view-treatment")} />
