@@ -346,6 +346,18 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
             <NavItem label="View Doctor" active={activeView === "view-doctor"} onClick={() => nav("view-doctor")} />
             <NavItem label="Edit Doctor" active={activeView === "edit-doctor"} onClick={() => nav("edit-doctor")} />
           </NavGroup>
+
+          <NavGroup icon={<Users size={16} />} label="Patients" isOpen={openNavGroup === "patients"} onToggle={() => toggleNavGroup("patients")}>
+            <NavItem label="Add Patient" active={activeView === "add-patient"} onClick={() => nav("add-patient")} />
+            <NavItem label="View Patient" active={activeView === "view-patient"} onClick={() => nav("view-patient")} />
+          </NavGroup>
+
+          <NavGroup icon={<Database size={16} />} label="Services" isOpen={openNavGroup === "services"} onToggle={() => toggleNavGroup("services")}>
+            <NavItem label="Manage Services" active={activeView === "view-services"} onClick={() => nav("view-services")} />
+            <NavItem label="Departments" active={activeView === "view-department"} onClick={() => nav("view-department")} />
+            <NavItem label="Treatment Types" active={activeView === "view-treatment"} onClick={() => nav("view-treatment")} />
+            <NavItem label="Medicines" active={activeView === "view-medicine"} onClick={() => nav("view-medicine")} />
+          </NavGroup>
           </aside>
         <main className="adm-main">
 
@@ -631,7 +643,8 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
                 <h2 className="adm-panel-title">View Patient Record</h2>
                 <button className="adm-btn-primary" onClick={() => setActiveView("add-patient")}>+ Add Patient</button>
               </div>
-
+            </div>
+      )}
           {/* ===== MANAGE SERVICES ===== */}
           {activeView === "view-services" && (
             <div className="adm-content-panel">
