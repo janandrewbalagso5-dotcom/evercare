@@ -97,16 +97,28 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
   });
 
   // ── Service state ──────────────────────────────────────────────
-  const [departments, setDepartments] = useState([
+  const DEFAULT_DEPARTMENTS = [
     { id: "dep_1", name: "Cardiology", description: "Heart and cardiovascular care" },
     { id: "dep_2", name: "Pediatrics", description: "Child and infant healthcare" },
     { id: "dep_3", name: "Dermatology", description: "Skin, hair, and nail conditions" },
     { id: "dep_4", name: "General Medicine", description: "Primary care and general health" },
     { id: "dep_5", name: "Orthopedics", description: "Bone, joint, and muscle treatment" },
-  ]);
+  ];
+
+  const [departments, setDepartments] = useState(() => {
+    try {
+      const stored = localStorage.getItem("evercare_departments");
+      return stored ? JSON.parse(stored) : DEFAULT_DEPARTMENTS;
+    } catch { return DEFAULT_DEPARTMENTS; }
+  });
   const [newDepartment, setNewDepartment] = useState({ name: "", description: "" });
 
-  // Derived: specialties always mirror the departments list
+  // Persist departments to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("evercare_departments", JSON.stringify(departments));
+  }, [departments]);
+
+  // Derived: specialties always mirror the live departments list
   const specialties = departments.map((d) => d.name);
 
   const [treatmentTypes, setTreatmentTypes] = useState([
@@ -271,9 +283,8 @@ export default function AdminPortal({ currentUser, showNotification, onLogout })
     e.preventDefault();
     if (!newDepartment.name.trim()) return;
     const updated = [...departments, { id: "dep_" + Date.now(), ...newDepartment }];
-    setDepartments(updated);
-    if (!newDoc.specialty) setNewDoc((d) => ({ ...d, specialty: updated[0].name }));
-    showNotification("Department added!", "success");
+    setDepartments(updated); // useEffect will persist to localStorage
+    showNotification("Department added! It is now available as a specialty under Add Doctor.", "success");
     setNewDepartment({ name: "", description: "" });
   };
 
