@@ -2836,6 +2836,22 @@ td {
   min-height: calc(100vh - 46px);
 }
 
+.adm-hamburger {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    margin-right: 12px;
+}
+
+@media (max-width: 768px) {
+    .adm-hamburger { display: block; }
+    .adm-sidebar { display: none; position: fixed; z-index: 999; height: 100%; }
+    .adm-sidebar.open { display: flex; }
+}
+
 /* ── Sidebar ── */
 .adm-sidebar {
   width: 220px;
