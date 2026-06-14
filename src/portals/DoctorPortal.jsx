@@ -266,6 +266,7 @@ export default function DoctorPortal({
   const [activeView, setActiveView] = useState("dashboard");
   const [openNavGroup, setOpenNavGroup] = useState("appointment");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settings, setSettings] = useState({});
   const toggleNavGroup = (key) =>
     setOpenNavGroup((prev) => (prev === key ? null : key));
 
@@ -524,37 +525,21 @@ export default function DoctorPortal({
     "05:00 PM",
     "06:00 PM",
   ];
-  const treatTypes = [
-    "Blood Test",
-    "X-Ray",
-    "MRI",
-    "Ultrasound",
-    "ECG",
-    "Surgery",
-    "Physiotherapy",
-    "Vaccination",
-    "Consultation",
-    "Other",
-  ];
-  const medicines = [
-    "Amoxicillin 500mg",
-    "Paracetamol 500mg",
-    "Ibuprofen 400mg",
-    "Metformin 500mg",
-    "Amlodipine 5mg",
-    "Omeprazole 20mg",
-    "Cetirizine 10mg",
-    "Azithromycin 500mg",
-  ];
-  const departments = [
-    "Gynecology",
-    "Cardiology",
-    "Orthopedics",
-    "Neurology",
-    "Pediatrics",
-    "Dermatology",
-    "General Medicine",
-  ];
+  const treatTypes = settings.treatments && settings.treatments.length > 0
+    ? settings.treatments
+    : [
+        "Blood Test", "X-Ray", "MRI", "Ultrasound", "ECG", "Surgery", "Physiotherapy", "Vaccination", "Consultation", "Other",
+      ];
+  const medicines = settings.medicines && settings.medicines.length > 0
+    ? settings.medicines
+    : [
+        "Amoxicillin 500mg", "Paracetamol 500mg", "Ibuprofen 400mg", "Metformin 500mg", "Amlodipine 5mg", "Omeprazole 20mg", "Cetirizine 10mg", "Azithromycin 500mg",
+      ];
+  const departments = settings.departments && settings.departments.length > 0
+    ? settings.departments
+    : [
+        "Gynecology", "Cardiology", "Orthopedics", "Neurology", "Pediatrics", "Dermatology", "General Medicine",
+      ];
 
   const pendingApts = appointments.filter((a) => a.status === "Pending");
   const approvedApts = appointments.filter((a) => a.status === "Confirmed");
